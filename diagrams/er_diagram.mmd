@@ -1,0 +1,29 @@
+erDiagram
+    PROFILES ||--o{ SHIFTS : creates
+    PROFILES ||--o{ SIGNUPS : "signs up"
+    SHIFTS ||--o{ SIGNUPS : has
+
+    PROFILES {
+        uuid id PK
+        string full_name
+        string role
+        string phone
+    }
+    SHIFTS {
+        uuid id PK
+        string title
+        string description
+        string location
+        date date
+        time start_time
+        time end_time
+        int capacity
+        uuid created_by FK
+    }
+    SIGNUPS {
+        uuid id PK
+        uuid shift_id FK
+        uuid volunteer_id FK
+        string status
+        datetime signed_up_at
+    }

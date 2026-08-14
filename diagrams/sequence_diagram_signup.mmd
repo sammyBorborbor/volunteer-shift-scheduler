@@ -1,0 +1,23 @@
+sequenceDiagram
+    actor V as Volunteer
+    participant FE as Frontend (React)
+    participant DB as Supabase (Postgres + RLS)
+
+    V->>FE: Select shift and click Sign Up
+    FE->>DB: Query shift capacity and current signups
+    DB-->>FE: Capacity data
+
+    alt Shift at capacity
+        FE-->>V: Show Shift full error
+    else Capacity available
+        FE->>DB: Query volunteer's existing signups
+        DB-->>FE: Existing signups
+
+        alt Overlapping shift found
+            FE-->>V: Show Schedule conflict error
+        else No overlap
+            FE->>DB: Insert signup with status confirmed
+            DB-->>FE: Signup confirmed
+            FE-->>V: Show confirmation
+        end
+    end

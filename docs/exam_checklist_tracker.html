@@ -1,0 +1,527 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #14171c;
+    --surface: #1b2028;
+    --surface-2: #20262f;
+    --border: #2a3140;
+    --text: #ece9e2;
+    --text-muted: #8890a0;
+    --text-dim: #565e6e;
+    --accent: #e8a33d;
+    --accent-soft: rgba(232, 163, 61, 0.14);
+    --complete: #4fa88f;
+    --complete-soft: rgba(79, 168, 143, 0.14);
+    --font-display: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+
+  /* ---------- MASTHEAD ---------- */
+  .masthead {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 22px;
+    margin-bottom: 28px;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 28px;
+    letter-spacing: -0.01em;
+    margin: 0 0 4px;
+    line-height: 1.15;
+  }
+
+  .subhead {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+
+  .mission-readout {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+
+  .readout-number {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 40px;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    transition: color 0.3s ease;
+  }
+
+  .readout-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .readout-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--text-dim);
+  }
+
+  .readout-count {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .mission-bar {
+    display: flex;
+    gap: 3px;
+    height: 8px;
+  }
+
+  .mission-seg {
+    flex: 1;
+    background: var(--surface-2);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .mission-seg-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 0%;
+    background: var(--accent);
+    transition: width 0.4s ease;
+  }
+
+  .mission-seg-fill.done { background: var(--complete); }
+
+  /* ---------- PHASE SECTIONS ---------- */
+  .phase {
+    margin-bottom: 30px;
+  }
+
+  .phase-head {
+    margin-bottom: 12px;
+  }
+
+  .phase-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+
+  .phase h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 18px;
+    margin: 0 0 10px;
+    color: var(--text);
+  }
+
+  .phase-progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .phase-bar {
+    flex: 1;
+    height: 5px;
+    background: var(--surface-2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .phase-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width 0.35s ease, background 0.35s ease;
+  }
+
+  .phase-bar-fill.done { background: var(--complete); }
+
+  .phase-count {
+    font-size: 11px;
+    color: var(--text-muted);
+    min-width: 40px;
+    text-align: right;
+  }
+
+  /* ---------- CHECKLIST ---------- */
+  .checklist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .check-item:last-child { border-bottom: none; }
+
+  .checkbox {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    margin-top: 1px;
+    border-radius: 5px;
+    border: 1.5px solid var(--text-dim);
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+    position: relative;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+
+  .checkbox:hover { border-color: var(--accent); }
+
+  .checkbox[aria-checked="true"] {
+    background: var(--complete);
+    border-color: var(--complete);
+  }
+
+  .checkbox[aria-checked="true"]::after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid var(--bg);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  .checkbox:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .check-label {
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--text);
+    padding-top: 1px;
+    transition: color 0.2s ease;
+  }
+
+  .check-item.is-done .check-label {
+    color: var(--text-dim);
+    text-decoration: line-through;
+    text-decoration-color: var(--text-dim);
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    margin-top: 10px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-note {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .reset-btn {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease;
+  }
+
+  .reset-btn:hover {
+    border-color: var(--text-muted);
+    color: var(--text);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+
+  @media (max-width: 480px) {
+    h1 { font-size: 23px; }
+    .readout-number { font-size: 32px; }
+  }
+</style>
+
+<div class="app">
+  <header class="masthead">
+    <div class="eyebrow">CSCD602 · ADVANCED SOFTWARE ENGINEERING · INDIVIDUAL EXAM</div>
+    <h1>Volunteer Shift Scheduler</h1>
+    <div class="subhead">48-Hour Build Tracker</div>
+    <div class="mission-readout">
+      <div class="readout-number" id="overallPct">0%</div>
+      <div class="readout-detail">
+        <div class="readout-label">MISSION PROGRESS</div>
+        <div class="readout-count" id="overallCount">loading checkpoints…</div>
+      </div>
+    </div>
+    <div class="mission-bar" id="missionBar"></div>
+  </header>
+
+  <main id="phaseContainer"></main>
+
+  <footer>
+    <span class="footer-note">Saved automatically to this device</span>
+    <button class="reset-btn" id="resetBtn">Reset all</button>
+  </footer>
+</div>
+
+<script>
+  const PHASES = [
+    {
+      num: 1, hours: "HOURS 0–4", title: "Planning & Requirements",
+      items: [
+        { id: "p1-1", label: "Problem statement written" },
+        { id: "p1-2", label: "Stakeholders identified" },
+        { id: "p1-3", label: "Requirements gathered & MoSCoW prioritized" },
+        { id: "p1-4", label: "SRS drafted" },
+        { id: "p1-5", label: "Effort estimation (UCP) written with justification" },
+        { id: "p1-6", label: "Scope locked to Must-haves" },
+      ]
+    },
+    {
+      num: 2, hours: "HOURS 4–8", title: "Analysis & Design",
+      items: [
+        { id: "p2-1", label: "System architecture documented" },
+        { id: "p2-2", label: "Use case diagram drawn" },
+        { id: "p2-3", label: "ER diagram drawn" },
+        { id: "p2-4", label: "Sequence diagram — signup flow" },
+        { id: "p2-5", label: "Supabase schema created" },
+        { id: "p2-6", label: "Tech stack write-up" },
+        { id: "p2-7", label: "Initial technical debt risks logged" },
+      ]
+    },
+    {
+      num: 3, hours: "HOURS 8–26", title: "Implementation",
+      items: [
+        { id: "p3-1", label: "Project scaffolded (Vite + React + Tailwind)" },
+        { id: "p3-2", label: "Supabase tables + RLS policies live" },
+        { id: "p3-3", label: "Auth: register / login working" },
+        { id: "p3-4", label: "Coordinator: create shift" },
+        { id: "p3-5", label: "Volunteer: view open shifts" },
+        { id: "p3-6", label: "Volunteer: sign up (capacity + overlap check)" },
+        { id: "p3-7", label: "Volunteer: cancel signup" },
+        { id: "p3-8", label: "Coordinator: view roster" },
+        { id: "p3-9", label: "Coordinator: mark attendance" },
+        { id: "p3-10", label: "Volunteer: \"My Shifts\" view" },
+        { id: "p3-11", label: "Input validation on all forms" },
+        { id: "p3-12", label: "Error handling on all API calls" },
+        { id: "p3-13", label: "Responsive styling pass" },
+        { id: "p3-14", label: "Tech debt log updated continuously" },
+      ]
+    },
+    {
+      num: 4, hours: "HOURS 26–32", title: "Testing & Refinement",
+      items: [
+        { id: "p4-1", label: "Unit test: capacity-check function" },
+        { id: "p4-2", label: "Unit test: overlap-check function" },
+        { id: "p4-3", label: "Functional: signup success" },
+        { id: "p4-4", label: "Functional: signup blocked at capacity" },
+        { id: "p4-5", label: "Functional: signup blocked on overlap" },
+        { id: "p4-6", label: "Functional: cancel signup" },
+        { id: "p4-7", label: "Functional: invalid shift creation rejected" },
+        { id: "p4-8", label: "Integration: signup flow against live Supabase" },
+        { id: "p4-9", label: "UAT walkthrough — Volunteer" },
+        { id: "p4-10", label: "UAT walkthrough — Coordinator" },
+        { id: "p4-11", label: "Security check: RLS blocks cross-user access" },
+        { id: "p4-12", label: "Test results table completed" },
+      ]
+    },
+    {
+      num: 5, hours: "HOURS 32–36", title: "Deployment",
+      items: [
+        { id: "p5-1", label: "Frontend deployed to Vercel" },
+        { id: "p5-2", label: "Production build verified end-to-end" },
+        { id: "p5-3", label: "Supabase connection verified in production" },
+        { id: "p5-4", label: "Test volunteer account seeded" },
+        { id: "p5-5", label: "Test coordinator account seeded" },
+        { id: "p5-6", label: "GitHub repo complete & pushed" },
+        { id: "p5-7", label: "Live URL + credentials recorded" },
+      ]
+    },
+    {
+      num: 6, hours: "HOURS 36–48", title: "Documentation & Submission",
+      items: [
+        { id: "p6-1", label: "Project Documentation compiled (19 sections)" },
+        { id: "p6-2", label: "SRS finalized" },
+        { id: "p6-3", label: "Testing report finalized" },
+        { id: "p6-4", label: "Technical Debt Plan finalized (with repayment plan)" },
+        { id: "p6-5", label: "User manual written" },
+        { id: "p6-6", label: "Maintenance & future evolution section written" },
+        { id: "p6-7", label: "Deployment_and_Source_Links.txt filled" },
+        { id: "p6-8", label: "Docs combined into one PDF" },
+        { id: "p6-9", label: "Part D final checklist verified" },
+        { id: "p6-10", label: "ZIP packaged (StudentID_ProjectName)" },
+        { id: "p6-11", label: "Submitted via Sakai" },
+      ]
+    },
+  ];
+
+  const TOTAL_ITEMS = PHASES.reduce((sum, ph) => sum + ph.items.length, 0);
+  const STORAGE_KEY = "exam-checklist-state-v1";
+  let state = {};
+
+  function buildDOM() {
+    const container = document.getElementById("phaseContainer");
+    const missionBar = document.getElementById("missionBar");
+    container.innerHTML = "";
+    missionBar.innerHTML = "";
+
+    PHASES.forEach(phase => {
+      // mission bar segment
+      const seg = document.createElement("div");
+      seg.className = "mission-seg";
+      seg.innerHTML = `<div class="mission-seg-fill" id="seg-${phase.num}"></div>`;
+      missionBar.appendChild(seg);
+
+      // phase section
+      const section = document.createElement("section");
+      section.className = "phase";
+      section.innerHTML = `
+        <div class="phase-head">
+          <div class="phase-eyebrow">PHASE ${phase.num} · ${phase.hours}</div>
+          <h2>${phase.title}</h2>
+          <div class="phase-progress">
+            <div class="phase-bar"><div class="phase-bar-fill" id="bar-${phase.num}"></div></div>
+            <span class="phase-count" id="count-${phase.num}">0/${phase.items.length}</span>
+          </div>
+        </div>
+        <ul class="checklist" id="list-${phase.num}"></ul>
+      `;
+      container.appendChild(section);
+
+      const list = section.querySelector(`#list-${phase.num}`);
+      phase.items.forEach(item => {
+        const li = document.createElement("li");
+        li.className = "check-item";
+        li.dataset.id = item.id;
+        li.innerHTML = `
+          <button class="checkbox" role="checkbox" aria-checked="false" aria-label="${item.label}"></button>
+          <span class="check-label">${item.label}</span>
+        `;
+        li.querySelector(".checkbox").addEventListener("click", () => toggleItem(item.id));
+        list.appendChild(li);
+      });
+    });
+  }
+
+  function toggleItem(id) {
+    state[id] = !state[id];
+    render();
+    saveState();
+  }
+
+  function render() {
+    let doneTotal = 0;
+
+    PHASES.forEach(phase => {
+      let doneInPhase = 0;
+      phase.items.forEach(item => {
+        const isDone = !!state[item.id];
+        if (isDone) { doneInPhase++; doneTotal++; }
+        const li = document.querySelector(`.check-item[data-id="${item.id}"]`);
+        if (li) {
+          li.classList.toggle("is-done", isDone);
+          const cb = li.querySelector(".checkbox");
+          cb.setAttribute("aria-checked", isDone ? "true" : "false");
+        }
+      });
+
+      const pct = Math.round((doneInPhase / phase.items.length) * 100);
+      const bar = document.getElementById(`bar-${phase.num}`);
+      const seg = document.getElementById(`seg-${phase.num}`);
+      const count = document.getElementById(`count-${phase.num}`);
+      bar.style.width = pct + "%";
+      seg.style.width = pct + "%";
+      const isComplete = doneInPhase === phase.items.length;
+      bar.classList.toggle("done", isComplete);
+      seg.classList.toggle("done", isComplete);
+      count.textContent = `${doneInPhase}/${phase.items.length}`;
+    });
+
+    const overallPct = Math.round((doneTotal / TOTAL_ITEMS) * 100);
+    document.getElementById("overallPct").textContent = overallPct + "%";
+    document.getElementById("overallCount").textContent = `${doneTotal} / ${TOTAL_ITEMS} checkpoints`;
+  }
+
+  async function saveState() {
+    try {
+      await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+    } catch (e) {
+      console.error("Could not save checklist state:", e);
+    }
+  }
+
+  async function loadState() {
+    try {
+      const result = await window.storage.get(STORAGE_KEY, false);
+      if (result && result.value) {
+        state = JSON.parse(result.value);
+      }
+    } catch (e) {
+      state = {};
+    }
+    render();
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    if (confirm("Reset all checkpoints? This can't be undone.")) {
+      state = {};
+      render();
+      saveState();
+    }
+  });
+
+  buildDOM();
+  loadState();
+</script>

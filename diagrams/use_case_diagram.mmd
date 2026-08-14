@@ -1,0 +1,25 @@
+flowchart LR
+    Volunteer(["Volunteer"])
+    Coordinator(["Coordinator"])
+
+    subgraph System["Volunteer Shift Scheduler"]
+        direction TB
+        UC1(["Register / Log In"])
+        UC2(["View Shifts"])
+        UC3(["Sign Up for Shift"])
+        UC4(["Cancel Sign-Up"])
+        UC5(["Create Shift"])
+        UC6(["View Roster"])
+        UC7(["Mark Attendance"])
+        UC8(["Check Capacity and Overlap"])
+    end
+
+    Volunteer --- UC1
+    Volunteer --- UC2
+    Volunteer --- UC3
+    Volunteer --- UC4
+    Coordinator --- UC1
+    Coordinator --- UC5
+    Coordinator --- UC6
+    Coordinator --- UC7
+    UC3 -.->|include| UC8

@@ -1,0 +1,20 @@
+flowchart TB
+    subgraph Client["Client Layer"]
+        Browser["Browser — React 18 + Vite + Tailwind CSS"]
+    end
+
+    subgraph Hosting["Vercel"]
+        CDN["Static Hosting / CDN + CI Auto-Deploy"]
+    end
+
+    subgraph Backend["Supabase Cloud"]
+        Auth["Auth — JWT-based sessions"]
+        DB[("PostgreSQL Database + Row-Level Security policies")]
+    end
+
+    GitHub["GitHub Repository"] -->|git push triggers build| CDN
+    CDN -->|Serves SPA bundle| Browser
+    Browser -->|"HTTPS — login/register"| Auth
+    Auth -->|Issues session JWT| Browser
+    Browser -->|"Queries via supabase-js, JWT attached"| DB
+    DB -->|RLS-filtered results| Browser
