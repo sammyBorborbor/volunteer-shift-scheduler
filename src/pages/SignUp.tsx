@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { AuthLayout } from '../components/AuthLayout'
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { FormField } from '../components/FormField'
@@ -75,8 +76,8 @@ export default function SignUp() {
 
   if (checkEmail) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-surface px-4">
-        <Card className="w-full max-w-sm text-center">
+      <AuthLayout tagline="One more step — confirm your email to get started.">
+        <Card className="w-full text-center">
           <h1 className="text-lg font-semibold text-ink">Check your email</h1>
           <p className="mt-2 text-sm text-muted">
             We sent a confirmation link to <span className="font-medium text-ink">{email}</span>.
@@ -86,13 +87,13 @@ export default function SignUp() {
             <Button variant="primary">Go to sign in</Button>
           </Link>
         </Card>
-      </div>
+      </AuthLayout>
     )
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface px-4 py-12">
-      <Card className="w-full max-w-sm">
+    <AuthLayout tagline="Find shifts that fit your schedule and start making a difference.">
+      <Card className="w-full">
         <h1 className="text-xl font-semibold text-ink">Sign up to volunteer</h1>
         <p className="mt-1 text-sm text-muted">
           Already have an account?{' '}
@@ -140,6 +141,6 @@ export default function SignUp() {
           </Button>
         </form>
       </Card>
-    </div>
+    </AuthLayout>
   )
 }

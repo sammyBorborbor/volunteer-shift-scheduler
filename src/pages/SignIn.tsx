@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { AuthLayout } from '../components/AuthLayout'
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { FormField } from '../components/FormField'
@@ -30,8 +31,8 @@ export default function SignIn() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface px-4 py-12">
-      <Card className="w-full max-w-sm">
+    <AuthLayout tagline="Every shift you pick up moves your community forward.">
+      <Card className="w-full">
         <h1 className="text-xl font-semibold text-ink">Sign in</h1>
         <p className="mt-1 text-sm text-muted">
           New here?{' '}
@@ -67,6 +68,6 @@ export default function SignIn() {
           </Button>
         </form>
       </Card>
-    </div>
+    </AuthLayout>
   )
 }
