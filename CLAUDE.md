@@ -13,7 +13,11 @@ An exam project (CSCD602 Advanced Software Engineering, University of Ghana) —
 - `npm run lint` — oxlint (config: `.oxlintrc.json`)
 - `npm run preview` — preview the production build locally
 
-There is no test suite yet. CONTEXT.md's Phase 4 testing plan (unit/functional/integration/UAT/security cases) hasn't been implemented — check CONTEXT.md before assuming test tooling exists.
+## Testing
+
+Follow **test-driven development** for new functionality: write a failing test first, implement the minimum needed to pass it, then refactor. This supersedes CONTEXT.md's original plan of a separate Phase 4 testing pass after implementation — write tests as you build, not after.
+
+No test runner is configured yet. Set one up (Vitest is the natural fit for this Vite + React stack) the first time a test is actually needed, rather than installing test infrastructure speculatively. CONTEXT.md's Phase 4 test-case list (unit/functional/integration/UAT/security) is still the reference for *what* to cover — TDD changes *when* those tests get written, not what they need to check.
 
 ## Git commits
 
@@ -24,9 +28,9 @@ This is an individually graded exam submission — no collaboration is permitted
 **Stack:** React 19 + Vite + TypeScript + Tailwind CSS v4, backed entirely by Supabase (Postgres + Auth + RLS) — there is no hand-built API layer. All data access goes through `supabase-js` directly from components/hooks, authorized by RLS policies, not application code.
 
 **Folder layout** (feature-area organization per CONTEXT.md's NFR-06):
-- `src/components/` — shared UI primitives (`Button`, `Card`, `StatusPill`, `Layout`)
-- `src/pages/` — route-level views, one per use case (empty until routing is introduced)
-- `src/hooks/` — data/auth hooks (empty until Step 2+)
+- `src/components/` — shared UI primitives (`Button`, `Card`, `StatusPill`, `Layout`, `FormField`)
+- `src/pages/` — route-level views, one per use case (`Landing`, `SignUp`, `SignIn`, `AppHome`)
+- `src/hooks/` — data/auth hooks (`useAuth`)
 - `src/lib/supabaseClient.ts` — the single Supabase client instance
 
 **Supabase wiring (`src/lib/supabaseClient.ts`):** exports `supabase` and `isSupabaseConfigured`. It deliberately never throws on missing env vars — a prior version did, which crashed the entire React tree before anything rendered (a blank page with only a console error). Any code path that touches Supabase should check `isSupabaseConfigured` and degrade to a visible status/error state, never let a missing-config error take down the whole app (NFR-04: no silent failures).
