@@ -3,6 +3,7 @@ import {
   getAttendanceStatus,
   getCapacityStatus,
   getShiftActionState,
+  getShiftEditability,
   getSignupHistoryStatus,
   getSignupProgress,
   isUpcoming,
@@ -168,5 +169,50 @@ describe('getSignupHistoryStatus', () => {
     const status = getSignupHistoryStatus('cancelled')
     expect(status.tone).toBe('neutral')
     expect(status.label).toBe('Cancelled')
+  })
+
+  it('distinguishes a coordinator-cancelled shift from a self-cancelled signup', () => {
+    const status = getSignupHistoryStatus('cancelled', true)
+    expect(status.tone).toBe('neutral')
+    expect(status.label).toBe('Shift cancelled')
+  })
+
+  it('does not apply the shift-cancelled label to non-cancelled statuses', () => {
+    const status = getSignupHistoryStatus('completed', true)
+    expect(status.label).toBe('Completed')
+  })
+})
+
+describe('getShiftEditability', () => {
+  it('allows editing and cancelling an upcoming, non-cancelled shift', () => {
+    const result = getShiftEditability('2026-08-20', null, TODAY)
+    expect(result.canEdit).toBe(true)
+    expect(result.canCancel).toBe(true)
+    expect(result.reason).toBeUndefined()
+  })
+
+  it('allows editing a shift happening today', () => {
+    const result = getShiftEditability('2026-08-14', null, TODAY)
+    expect(result.canEdit).toBe(true)
+    expect(result.canCancel).toBe(true)
+  })
+
+  it('blocks editing and cancelling a shift that has already been cancelled', () => {
+    const result = getShiftEditability('2026-08-20', '2026-08-10T09:00:00Z', TODAY)
+    expect(result.canEdit).toBe(false)
+    expect(result.canCancel).toBe(false)
+    expect(result.reason).toBe('This shift has been cancelled.')
+  })
+
+  it('blocks editing and cancelling a shift that already happened', () => {
+    const result = getShiftEditability('2026-08-01', null, TODAY)
+    expect(result.canEdit).toBe(false)
+    expect(result.canCancel).toBe(false)
+    expect(result.reason).toBe("Past shifts can't be edited or cancelled.")
+  })
+
+  it('prioritizes the cancelled reason over the past-shift reason', () => {
+    const result = getShiftEditability('2026-08-01', '2026-08-02T09:00:00Z', TODAY)
+    expect(result.reason).toBe('This shift has been cancelled.')
   })
 })

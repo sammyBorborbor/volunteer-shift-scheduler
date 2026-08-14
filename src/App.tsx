@@ -5,6 +5,7 @@ import type { UserRole } from './hooks/useAuth'
 import AppHome from './pages/AppHome'
 import CoordinatorHome from './pages/CoordinatorHome'
 import CreateShift from './pages/CreateShift'
+import EditShift from './pages/EditShift'
 import Landing from './pages/Landing'
 import MySignups from './pages/MySignups'
 import Roster from './pages/Roster'
@@ -74,6 +75,14 @@ function App() {
           element={
             <ProtectedRoute role="coordinator">
               <CreateShift />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/coordinator/shifts/:shiftId/edit"
+          element={
+            <ProtectedRoute role="coordinator">
+              <EditShift />
             </ProtectedRoute>
           }
         />

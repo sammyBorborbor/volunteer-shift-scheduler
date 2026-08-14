@@ -11,7 +11,7 @@ import {
 } from '../lib/shiftDisplay'
 
 function HistoryRow({ entry }: { entry: ShiftHistoryEntry }) {
-  const badge = getSignupHistoryStatus(entry.status)
+  const badge = getSignupHistoryStatus(entry.status, Boolean(entry.shift.cancelled_at))
   return (
     <li className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
       <div>

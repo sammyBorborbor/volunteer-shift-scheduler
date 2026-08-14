@@ -54,9 +54,18 @@ export type SignupHistoryStatus = AttendanceStatus | 'cancelled'
 // from AttendanceStatus rather than widening that one, since every other
 // caller (useMySignups, useRoster, ShiftCard, RosterEntryRow) intentionally
 // never sees 'cancelled' and shouldn't have to handle it.
-export function getSignupHistoryStatus(status: SignupHistoryStatus): StatusBadge {
+// `shiftCancelled` distinguishes a coordinator cancelling the whole shift
+// (which cascades every confirmed signup to 'cancelled', FR-10) from a
+// volunteer cancelling their own signup — the same underlying status, but a
+// volunteer shouldn't have to wonder whether they did this themselves.
+export function getSignupHistoryStatus(
+  status: SignupHistoryStatus,
+  shiftCancelled = false,
+): StatusBadge {
   if (status === 'cancelled') {
-    return { tone: 'neutral', label: 'Cancelled' }
+    return shiftCancelled
+      ? { tone: 'neutral', label: 'Shift cancelled' }
+      : { tone: 'neutral', label: 'Cancelled' }
   }
   return getAttendanceStatus(status)
 }
@@ -82,6 +91,30 @@ export function getShiftActionState(
 export function isUpcoming(date: string, now: Date = new Date()): boolean {
   const today = now.toISOString().slice(0, 10)
   return date >= today
+}
+
+export interface ShiftEditability {
+  canEdit: boolean
+  canCancel: boolean
+  reason?: string
+}
+
+// FR-10: a coordinator can edit/cancel a shift only while it's both upcoming
+// and not already cancelled. Cancelled wins over past-dated when a shift is
+// somehow both (cancelling doesn't move the date), since "already cancelled"
+// is the more specific, more useful thing to tell the coordinator.
+export function getShiftEditability(
+  date: string,
+  cancelledAt: string | null,
+  now: Date = new Date(),
+): ShiftEditability {
+  if (cancelledAt) {
+    return { canEdit: false, canCancel: false, reason: 'This shift has been cancelled.' }
+  }
+  if (!isUpcoming(date, now)) {
+    return { canEdit: false, canCancel: false, reason: "Past shifts can't be edited or cancelled." }
+  }
+  return { canEdit: true, canCancel: true }
 }
 
 export function formatShiftDate(date: string): string {

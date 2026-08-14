@@ -11,6 +11,7 @@ export interface RosterShift {
   start_time: string
   end_time: string
   capacity: number
+  cancelled_at: string | null
 }
 
 export interface RosterEntry {
@@ -49,7 +50,7 @@ export function useRoster(shiftId: string) {
     const [shiftResult, signupsResult] = await Promise.all([
       supabase
         .from('shifts')
-        .select('id, title, description, location, date, start_time, end_time, capacity')
+        .select('id, title, description, location, date, start_time, end_time, capacity, cancelled_at')
         .eq('id', shiftId)
         .maybeSingle(),
       supabase
@@ -98,5 +99,11 @@ export function useRoster(shiftId: string) {
     refetch()
   }, [refetch])
 
-  return { shift, entries, loading, error, refetch }
+  const cancelShift = useCallback(async () => {
+    const { error: rpcError } = await supabase.rpc('cancel_shift', { p_shift_id: shiftId })
+    if (rpcError) throw rpcError
+    await refetch()
+  }, [shiftId, refetch])
+
+  return { shift, entries, loading, error, refetch, cancelShift }
 }

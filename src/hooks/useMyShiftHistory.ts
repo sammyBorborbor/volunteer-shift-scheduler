@@ -15,6 +15,7 @@ export interface ShiftHistoryEntry {
     date: string
     start_time: string
     end_time: string
+    cancelled_at: string | null
   }
 }
 
@@ -50,7 +51,9 @@ export function useMyShiftHistory() {
     // whole point is showing past shifts too.
     const { data, error: fetchError } = await supabase
       .from('signups')
-      .select('id, status, signed_up_at, shifts(id, title, description, location, date, start_time, end_time)')
+      .select(
+        'id, status, signed_up_at, shifts(id, title, description, location, date, start_time, end_time, cancelled_at)',
+      )
       .eq('volunteer_id', user.id)
     if (!mountedRef.current) return
     if (fetchError) {

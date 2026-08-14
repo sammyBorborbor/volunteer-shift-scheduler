@@ -24,11 +24,18 @@ export function CoordinatorShiftRow({ shift }: CoordinatorShiftRowProps) {
           {shift.location ? ` · ${shift.location}` : ''}
         </p>
       </div>
-      <Link to={`/coordinator/shifts/${shift.id}/roster`} className="shrink-0">
-        <Button variant="ghost" size="sm">
-          View roster
-        </Button>
-      </Link>
+      <div className="flex shrink-0 gap-2">
+        <Link to={`/coordinator/shifts/${shift.id}/edit`}>
+          <Button variant="ghost" size="sm">
+            Edit
+          </Button>
+        </Link>
+        <Link to={`/coordinator/shifts/${shift.id}/roster`}>
+          <Button variant="ghost" size="sm">
+            View roster
+          </Button>
+        </Link>
+      </div>
     </Card>
   )
 }

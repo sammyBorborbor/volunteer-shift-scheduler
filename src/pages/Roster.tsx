@@ -1,12 +1,31 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { Button } from '../components/Button'
 import { Layout } from '../components/Layout'
 import { RosterEntryRow } from '../components/RosterEntryRow'
 import { useRoster } from '../hooks/useRoster'
-import { formatShiftDate, formatShiftTimeRange } from '../lib/shiftDisplay'
+import { formatShiftDate, formatShiftTimeRange, getShiftEditability } from '../lib/shiftDisplay'
 
 export default function Roster() {
   const { shiftId } = useParams<{ shiftId: string }>()
-  const { shift, entries, loading, error, refetch } = useRoster(shiftId ?? '')
+  const { shift, entries, loading, error, refetch, cancelShift } = useRoster(shiftId ?? '')
+  const [cancelling, setCancelling] = useState(false)
+  const [cancelError, setCancelError] = useState<string | null>(null)
+
+  async function handleCancelShift() {
+    if (!window.confirm('Cancel this shift? Everyone currently signed up will be notified their signup is cancelled.')) {
+      return
+    }
+    setCancelling(true)
+    setCancelError(null)
+    try {
+      await cancelShift()
+    } catch (err) {
+      setCancelError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+    } finally {
+      setCancelling(false)
+    }
+  }
 
   const pending = entries.filter((entry) => entry.status === 'confirmed')
   const recorded = entries.filter((entry) => entry.status !== 'confirmed')
@@ -35,6 +54,25 @@ export default function Roster() {
           <p className="mt-1 text-sm text-muted">
             {entries.length} of {shift.capacity} spots signed up
           </p>
+
+          {shift.cancelled_at ? (
+            <p className="mt-4 text-sm font-medium text-destructive" role="status">
+              This shift was cancelled.
+            </p>
+          ) : (
+            getShiftEditability(shift.date, shift.cancelled_at).canCancel && (
+              <div className="mt-4">
+                <Button variant="ghost" size="sm" loading={cancelling} onClick={handleCancelShift}>
+                  Cancel this shift
+                </Button>
+                {cancelError && (
+                  <p role="alert" aria-live="polite" className="mt-2 text-sm text-destructive">
+                    {cancelError}
+                  </p>
+                )}
+              </div>
+            )
+          )}
 
           {entries.length === 0 && (
             <div className="mt-6 rounded-xl border border-border bg-surface-elevated">
