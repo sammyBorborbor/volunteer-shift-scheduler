@@ -6,6 +6,7 @@ import AppHome from './pages/AppHome'
 import CoordinatorHome from './pages/CoordinatorHome'
 import CreateShift from './pages/CreateShift'
 import Landing from './pages/Landing'
+import Roster from './pages/Roster'
 import SignIn from './pages/SignIn'
 import SignUp from './pages/SignUp'
 
@@ -64,6 +65,14 @@ function App() {
           element={
             <ProtectedRoute role="coordinator">
               <CreateShift />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/coordinator/shifts/:shiftId/roster"
+          element={
+            <ProtectedRoute role="coordinator">
+              <Roster />
             </ProtectedRoute>
           }
         />

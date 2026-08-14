@@ -15,7 +15,7 @@ export default function AppHome() {
 
   const loading = shiftsLoading || signupsLoading
 
-  function handleSignedUp() {
+  function handleChange() {
     refetchShifts()
     refetchSignups()
   }
@@ -61,7 +61,7 @@ export default function AppHome() {
               key={shift.id}
               shift={shift}
               isSignedUp={signedUpShiftIds.has(shift.id)}
-              onSignedUp={handleSignedUp}
+              onChange={handleChange}
             />
           ))}
         </div>

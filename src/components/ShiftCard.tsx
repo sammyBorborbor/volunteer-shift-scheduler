@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Button } from './Button'
 import { Card } from './Card'
 import { StatusPill } from './StatusPill'
+import { useAuth } from '../hooks/useAuth'
 import type { UpcomingShift } from '../hooks/useShifts'
 import { supabase } from '../lib/supabaseClient'
 import {
@@ -14,10 +15,11 @@ import {
 interface ShiftCardProps {
   shift: UpcomingShift
   isSignedUp: boolean
-  onSignedUp: () => void
+  onChange: () => void
 }
 
-export function ShiftCard({ shift, isSignedUp, onSignedUp }: ShiftCardProps) {
+export function ShiftCard({ shift, isSignedUp, onChange }: ShiftCardProps) {
+  const { user } = useAuth()
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -37,7 +39,24 @@ export function ShiftCard({ shift, isSignedUp, onSignedUp }: ShiftCardProps) {
       setError(rpcError.message)
       setSubmitting(false)
     } else {
-      onSignedUp()
+      onChange()
+    }
+  }
+
+  async function handleCancel() {
+    if (!user) return
+    setSubmitting(true)
+    setError(null)
+    const { error: updateError } = await supabase
+      .from('signups')
+      .update({ status: 'cancelled' })
+      .eq('shift_id', shift.id)
+      .eq('volunteer_id', user.id)
+    if (updateError) {
+      setError(updateError.message)
+      setSubmitting(false)
+    } else {
+      onChange()
     }
   }
 
@@ -62,6 +81,19 @@ export function ShiftCard({ shift, isSignedUp, onSignedUp }: ShiftCardProps) {
         <div className="mt-1">
           <Button variant="primary" size="sm" loading={submitting} onClick={handleSignUp}>
             Sign up
+          </Button>
+          {error && (
+            <p role="alert" aria-live="polite" className="mt-2 text-sm text-destructive">
+              {error}
+            </p>
+          )}
+        </div>
+      )}
+
+      {actionState === 'signed-up' && (
+        <div className="mt-1">
+          <Button variant="ghost" size="sm" loading={submitting} onClick={handleCancel}>
+            Cancel sign-up
           </Button>
           {error && (
             <p role="alert" aria-live="polite" className="mt-2 text-sm text-destructive">

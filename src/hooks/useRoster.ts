@@ -1,0 +1,98 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { supabase } from '../lib/supabaseClient'
+
+export interface RosterShift {
+  id: string
+  title: string
+  description: string | null
+  location: string | null
+  date: string
+  start_time: string
+  end_time: string
+  capacity: number
+}
+
+export interface RosterEntry {
+  signupId: string
+  volunteerId: string
+  fullName: string
+  phone: string | null
+  signedUpAt: string
+}
+
+interface SignupRow {
+  id: string
+  signed_up_at: string
+  volunteer_id: string
+  profiles: { full_name: string; phone: string | null } | null
+}
+
+export function useRoster(shiftId: string) {
+  const [shift, setShift] = useState<RosterShift | null>(null)
+  const [entries, setEntries] = useState<RosterEntry[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const mountedRef = useRef(true)
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
+
+  const refetch = useCallback(async () => {
+    setLoading(true)
+    const [shiftResult, signupsResult] = await Promise.all([
+      supabase
+        .from('shifts')
+        .select('id, title, description, location, date, start_time, end_time, capacity')
+        .eq('id', shiftId)
+        .maybeSingle(),
+      supabase
+        .from('signups')
+        .select('id, signed_up_at, volunteer_id, profiles(full_name, phone)')
+        .eq('shift_id', shiftId)
+        .eq('status', 'confirmed')
+        .order('signed_up_at'),
+    ])
+    if (!mountedRef.current) return
+
+    if (shiftResult.error) {
+      setError(shiftResult.error.message)
+      setLoading(false)
+      return
+    }
+    if (!shiftResult.data) {
+      setError('Shift not found')
+      setLoading(false)
+      return
+    }
+    if (signupsResult.error) {
+      setError(signupsResult.error.message)
+      setLoading(false)
+      return
+    }
+
+    setError(null)
+    setShift(shiftResult.data)
+    setEntries(
+      ((signupsResult.data ?? []) as unknown as SignupRow[])
+        .filter((row) => row.profiles)
+        .map((row) => ({
+          signupId: row.id,
+          volunteerId: row.volunteer_id,
+          fullName: row.profiles!.full_name,
+          phone: row.profiles!.phone,
+          signedUpAt: row.signed_up_at,
+        })),
+    )
+    setLoading(false)
+  }, [shiftId])
+
+  useEffect(() => {
+    refetch()
+  }, [refetch])
+
+  return { shift, entries, loading, error, refetch }
+}

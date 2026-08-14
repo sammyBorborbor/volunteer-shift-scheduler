@@ -11,10 +11,7 @@ const volunteerLinks = [
   { label: 'My Sign-ups', to: '#' },
 ]
 
-const coordinatorLinks = [
-  { label: 'Create Shift', to: '/coordinator/create-shift' },
-  { label: 'Roster', to: '#' },
-]
+const coordinatorLinks = [{ label: 'Create Shift', to: '/coordinator/create-shift' }]
 
 const navLinkClasses =
   'inline-flex min-h-11 items-center rounded-md px-3 text-ink-foreground/85 transition-colors duration-200 hover:bg-ink-foreground/10 hover:text-ink-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none'
