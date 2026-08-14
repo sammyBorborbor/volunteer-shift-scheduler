@@ -253,25 +253,32 @@ Full justification and the Use Case Points calculation behind this budget are in
 
 Document each as: Test case → Expected result → Actual result → Pass/Fail.
 
-## Technical debt log (starter — keep updating as you build)
+## Technical debt log
+
+See `docs/TESTING.md` for the full test evidence behind several of these rows.
 
 | Debt | Cause | Impact | Priority | Resolution |
 |---|---|---|---|---|
-| No waitlist / auto-promotion | Cut to Should-have for time | Coordinator manually handles overflow | Medium | Add waitlist table + trigger, v2 |
-| No email/SMS notifications | Time constraint | Volunteers must recheck app manually | Low, acceptable now | Integrate Resend, future |
-| Thin automated test coverage | Time prioritized toward functional completeness | Regression risk on future changes | Medium | Build out full suite post-submission |
-| Single-organization assumption | Simplified architecture | Can't support multiple orgs without migration | Low | Add `organization_id` + multi-tenant RLS, v2 |
-
-(Add rows for whatever real corners actually get cut during the build — this list is
-a starting point, not the final version.)
+| No waitlist / auto-promotion (FR-12) | Cut to Could-have for time | Coordinator manually handles overflow | Medium | Add waitlist table + trigger, v2 |
+| No email/SMS notifications | Explicitly out of scope (Won't-have) | Volunteers must recheck app manually | Low, acceptable now | Integrate Resend, future |
+| No personal shift-history view (FR-09) | Should-have, deprioritized to finish Must-haves + process phases | Volunteers only see upcoming shifts, not a past/upcoming split; "My Sign-ups" nav item is still a placeholder | Medium | Build a dedicated page querying `signups` by `volunteer_id` across all statuses/dates |
+| No shift edit/cancel (FR-10) | Should-have, same reason | A coordinator who makes a mistake on a shift (wrong date, wrong capacity) has to live with it or manually fix it in Supabase | Medium | Add an edit form to `CreateShift`-adjacent route; cancelling a shift needs a decision on what happens to existing confirmed signups |
+| No under-capacity highlighting (FR-11) | Should-have, same reason | Coordinator has to scan every shift's badge manually rather than the UI surfacing low-signup shifts | Low | Mostly styling — the capacity data already exists via `get_upcoming_shifts_with_capacity` |
+| Single-organization assumption | Simplified architecture | Can't support multiple orgs without a migration | Low | Add `organization_id` + multi-tenant RLS, v2 |
+| `profiles` phone number readable by any authenticated user, not just coordinators | `profiles_select_authenticated` is verbatim from CONTEXT.md's own spec; not deviated from without checking in first | A volunteer can read every other volunteer's phone number via a broad `select`, not just names needed for rosters | Medium | Split into a public-safe view (id, full_name) for general use, restrict `phone` to the row owner + coordinators |
+| Leaked-password protection disabled (Supabase Auth) | Dashboard-only setting (Authentication → Policies), not reachable through the MCP/CLI tools used to build this project | New passwords aren't checked against HaveIBeenPwned | Low | Flip the toggle in the Supabase dashboard — a 30-second manual fix, just needs someone with dashboard access |
+| No automated integration/E2E/security test suite | Every functional/integration/UAT/security case in `docs/TESTING.md` was verified live (curl + Playwright) during development, not captured as a runnable test file | Re-verifying after a future change means manually redoing the same steps, not `npm test` | Medium | Add Playwright test specs and/or `pgTAP`/RLS-focused SQL tests for the highest-value flows (sign-up race, RLS boundaries) |
+| Concurrent sign-up row lock (`sign_up_for_shift`'s `for update`) not load-tested | No tooling used in this session could fire genuinely simultaneous requests | The row lock *should* serialize concurrent sign-ups per standard Postgres semantics, but this was verified by code inspection, not an actual race | Low | A small k6/Artillery script hitting the RPC concurrently would close this out |
+| Coordinator accounts require manual DB intervention to create | Deliberate — no self-service coordinator signup exists (closing that path is what fixed the privilege-escalation hole in `0004`) | Onboarding a new coordinator needs direct SQL access (insert into `auth.users`/`auth.identities`, then disable/re-enable `profiles_prevent_role_change` to promote the role) | Low, acceptable for single-org/exam scope | An admin invite flow, v2 |
+| No pagination on shift/roster lists | Not needed at expected single-org data volumes (NFR-05) | Would degrade with a large number of shifts or a very large roster | Low | Add cursor pagination to `useShifts`/`useRoster` if volume grows |
 
 ## Deployment checklist
 
-- [ ] Push to GitHub, connect repo to Vercel
-- [ ] Set `SUPABASE_URL` / `SUPABASE_ANON_KEY` as Vercel environment variables
-- [ ] Verify production build end-to-end
-- [ ] Seed one test Volunteer account and one test Coordinator account
-- [ ] Record live URL + credentials in `Deployment_and_Source_Links.txt`
+- [x] Push to GitHub, connect repo to Vercel
+- [x] Set `SUPABASE_URL` / `SUPABASE_ANON_KEY` as Vercel environment variables — note: must be named `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` (Vite only exposes `VITE_`-prefixed vars to the client); the names above are what this file originally said, not what Vite requires
+- [x] Verify production build end-to-end — caught and fixed a real bug doing this: client-side routes (`/signin`, `/app`, `/coordinator`) 404'd on direct navigation because Vercel's static hosting needs an explicit SPA rewrite (`vercel.json`), which didn't exist until this pass. See `docs/TESTING.md`.
+- [x] Seed one test Volunteer account and one test Coordinator account
+- [x] Record live URL + credentials in `Deployment_and_Source_Links.txt`
 
 ## Documents included in this handoff (`/docs`)
 

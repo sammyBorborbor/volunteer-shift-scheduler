@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-An exam project (CSCD602 Advanced Software Engineering, University of Ghana) — a volunteer shift-scheduling app under a strict 48-hour build window. Live at **https://volunteer-shift-scheduler.vercel.app/** (auto-deploys from `main` via Vercel). **Read `CONTEXT.md` first, always** — it is the authoritative handoff brief: functional/non-functional requirements (MoSCoW-prioritized), the full DB schema + RLS policies, the 9-step implementation order with its time budget, and explicit scope boundaries (what's Won't-have and must not be built even if easy). Treat scope discipline as a hard constraint, not a suggestion.
+An exam project (CSCD602 Advanced Software Engineering, University of Ghana) — a volunteer shift-scheduling app under a strict 48-hour build window. Live at **https://volunteer-shift-scheduler.vercel.app/** (auto-deploys from `main` via Vercel). **Read `CONTEXT.md` first, always** — it is the authoritative handoff brief: functional/non-functional requirements (MoSCoW-prioritized), the full DB schema + RLS policies, the 9-step implementation order with its time budget, explicit scope boundaries (what's Won't-have and must not be built even if easy), and a technical debt log that reflects what actually happened, not a generic starter list. Treat scope discipline as a hard constraint, not a suggestion. `docs/TESTING.md` has the full Phase-4 test evidence (unit/functional/integration/UAT/security); `Deployment_and_Source_Links.txt` has the live URL, repo, and seeded test account credentials.
 
 ## Commands
 
