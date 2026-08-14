@@ -1,42 +1,46 @@
 Volunteer Shift Scheduler — Deployment and Source Links
 =========================================================
 
-Live application
-----------------
-https://volunteer-shift-scheduler.vercel.app/
+Student Name: Samuel Owusu Ampadu
+Student ID: 22424245
+Project Title: Volunteer Shift Scheduler
+
+Live Application: https://volunteer-shift-scheduler.vercel.app/
+Admin URL: N/A — coordinators sign in at the same URL as volunteers
+(/signin); the app routes each account to its own dashboard by role
+(/app for volunteers, /coordinator for coordinators) rather than using a
+separate admin subdomain or path.
+
+Test Username: qa.volunteer2.shift.scheduler.test@gmail.com
+Test Password: Testpass123!
+
+Admin Username: qa.coordinator.shift.scheduler.test@gmail.com
+Admin Password: Testpass123!
+
+Source Code Repository: https://github.com/sammyBorborbor/volunteer-shift-scheduler
+
+---
+
+Supplementary details
+----------------------
 
 Auto-deploys from the `main` branch on every push (Vercel <-> GitHub integration).
 
-Source repository
-------------------
-https://github.com/sammyBorborbor/volunteer-shift-scheduler
+Supabase project ref: loelmcsadwuzeogcjgea (region: eu-west-1)
 
-Supabase project
-------------------
-Project ref: loelmcsadwuzeogcjgea
-Region: eu-west-1
-
-Test accounts
---------------
-These are throwaway accounts seeded specifically for grading/demo purposes — not real
-volunteers. Both are permanent (not cleaned up after testing, unlike the temporary
-shifts/signups created during verification, which were all removed).
-
-Coordinator:
-  email:    qa.coordinator.shift.scheduler.test@gmail.com
-  password: Testpass123!
-
-Volunteer:
-  email:    qa.volunteer2.shift.scheduler.test@gmail.com
-  password: Testpass123!
+Both accounts above are throwaway accounts seeded specifically for grading/demo
+purposes — not real volunteers. Both are permanent (not cleaned up after testing,
+unlike the temporary shifts/signups created during verification, which were all
+removed).
 
 Suggested walkthrough
 -----------------------
-1. Sign in as the coordinator, create a shift.
-2. Sign out, sign in as the volunteer, sign up for the shift you just created.
+1. Sign in as the coordinator (Admin credentials above), create a shift.
+2. Sign out, sign in as the volunteer (Test credentials above), sign up for the
+   shift you just created.
 3. Sign out, sign back in as the coordinator, open the shift's roster, mark the
    volunteer's attendance.
 4. Sign back in as the volunteer to see the "Attended" status reflected.
 
-See docs/TESTING.md for the full test evidence behind this build, and CLAUDE.md for
-architecture notes and non-obvious gotchas encountered while building it.
+See docs/TESTING.md for the full test evidence behind this build, docs/TECHNICAL_DEBT.md
+for the technical debt log, and docs/IMPLEMENTATION.md for how it was built.
