@@ -2,12 +2,12 @@ import type { StatusTone } from '../components/StatusPill'
 
 const LOW_CAPACITY_THRESHOLD = 3
 
-export interface CapacityStatus {
+export interface StatusBadge {
   tone: StatusTone
   label: string
 }
 
-export function getCapacityStatus(remaining: number): CapacityStatus {
+export function getCapacityStatus(remaining: number): StatusBadge {
   if (remaining <= 0) {
     return { tone: 'neutral', label: 'Full' }
   }
@@ -17,10 +17,30 @@ export function getCapacityStatus(remaining: number): CapacityStatus {
   return { tone: 'success', label: `${remaining} spots left` }
 }
 
-export type ShiftActionState = 'signed-up' | 'full' | 'open'
+export type AttendanceStatus = 'confirmed' | 'completed' | 'no_show'
 
-export function getShiftActionState(remaining: number, isSignedUp: boolean): ShiftActionState {
-  if (isSignedUp) return 'signed-up'
+const attendanceStatusMap: Record<AttendanceStatus, StatusBadge> = {
+  confirmed: { tone: 'neutral', label: 'Awaiting attendance' },
+  completed: { tone: 'success', label: 'Completed' },
+  no_show: { tone: 'destructive', label: 'No-show' },
+}
+
+export function getAttendanceStatus(status: AttendanceStatus): StatusBadge {
+  return attendanceStatusMap[status]
+}
+
+export type ShiftActionState = AttendanceStatus | 'full' | 'open'
+
+// `myStatus` is the volunteer's own signup status for this shift — null if
+// they have none (or it's cancelled, which frees them to sign up again).
+// A prior status (confirmed/completed/no_show) always wins over capacity,
+// since that reflects the volunteer's own history with the shift regardless
+// of how many spots are left for other people.
+export function getShiftActionState(
+  remaining: number,
+  myStatus: AttendanceStatus | null,
+): ShiftActionState {
+  if (myStatus) return myStatus
   if (remaining <= 0) return 'full'
   return 'open'
 }

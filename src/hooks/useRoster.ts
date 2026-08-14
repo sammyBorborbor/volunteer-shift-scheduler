@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import type { AttendanceStatus } from '../lib/shiftDisplay'
 import { supabase } from '../lib/supabaseClient'
 
 export interface RosterShift {
@@ -18,12 +19,14 @@ export interface RosterEntry {
   fullName: string
   phone: string | null
   signedUpAt: string
+  status: AttendanceStatus
 }
 
 interface SignupRow {
   id: string
   signed_up_at: string
   volunteer_id: string
+  status: AttendanceStatus
   profiles: { full_name: string; phone: string | null } | null
 }
 
@@ -51,9 +54,9 @@ export function useRoster(shiftId: string) {
         .maybeSingle(),
       supabase
         .from('signups')
-        .select('id, signed_up_at, volunteer_id, profiles(full_name, phone)')
+        .select('id, signed_up_at, volunteer_id, status, profiles(full_name, phone)')
         .eq('shift_id', shiftId)
-        .eq('status', 'confirmed')
+        .in('status', ['confirmed', 'completed', 'no_show'])
         .order('signed_up_at'),
     ])
     if (!mountedRef.current) return
@@ -85,6 +88,7 @@ export function useRoster(shiftId: string) {
           fullName: row.profiles!.full_name,
           phone: row.profiles!.phone,
           signedUpAt: row.signed_up_at,
+          status: row.status,
         })),
     )
     setLoading(false)

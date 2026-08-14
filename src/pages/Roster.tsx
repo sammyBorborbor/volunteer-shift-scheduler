@@ -1,18 +1,15 @@
 import { Link, useParams } from 'react-router-dom'
 import { Layout } from '../components/Layout'
+import { RosterEntryRow } from '../components/RosterEntryRow'
 import { useRoster } from '../hooks/useRoster'
 import { formatShiftDate, formatShiftTimeRange } from '../lib/shiftDisplay'
 
-function formatSignedUpAt(timestamp: string): string {
-  return new Date(timestamp).toLocaleString(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
-}
-
 export default function Roster() {
   const { shiftId } = useParams<{ shiftId: string }>()
-  const { shift, entries, loading, error } = useRoster(shiftId ?? '')
+  const { shift, entries, loading, error, refetch } = useRoster(shiftId ?? '')
+
+  const pending = entries.filter((entry) => entry.status === 'confirmed')
+  const recorded = entries.filter((entry) => entry.status !== 'confirmed')
 
   return (
     <Layout>
@@ -36,31 +33,42 @@ export default function Roster() {
             {shift.location ? ` · ${shift.location}` : ''}
           </p>
           <p className="mt-1 text-sm text-muted">
-            {entries.length} of {shift.capacity} spots confirmed
+            {entries.length} of {shift.capacity} spots signed up
           </p>
 
-          <div className="mt-6 rounded-xl border border-border bg-surface-elevated">
-            {entries.length === 0 ? (
+          {entries.length === 0 && (
+            <div className="mt-6 rounded-xl border border-border bg-surface-elevated">
               <p className="p-5 text-sm text-muted">No one has signed up for this shift yet.</p>
-            ) : (
-              <ul className="divide-y divide-border">
-                {entries.map((entry) => (
-                  <li
-                    key={entry.signupId}
-                    className="flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-ink">{entry.fullName}</p>
-                      {entry.phone && <p className="text-sm text-muted">{entry.phone}</p>}
-                    </div>
-                    <p className="text-sm text-muted">
-                      Signed up {formatSignedUpAt(entry.signedUpAt)}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+            </div>
+          )}
+
+          {pending.length > 0 && (
+            <section className="mt-6">
+              <h3 className="text-sm font-semibold text-ink">
+                Awaiting attendance ({pending.length})
+              </h3>
+              <div className="mt-3 rounded-xl border border-border bg-surface-elevated">
+                <ul className="divide-y divide-border">
+                  {pending.map((entry) => (
+                    <RosterEntryRow key={entry.signupId} entry={entry} onChange={refetch} />
+                  ))}
+                </ul>
+              </div>
+            </section>
+          )}
+
+          {recorded.length > 0 && (
+            <section className="mt-6">
+              <h3 className="text-sm font-semibold text-ink">Recorded ({recorded.length})</h3>
+              <div className="mt-3 rounded-xl border border-border bg-surface-elevated">
+                <ul className="divide-y divide-border">
+                  {recorded.map((entry) => (
+                    <RosterEntryRow key={entry.signupId} entry={entry} onChange={refetch} />
+                  ))}
+                </ul>
+              </div>
+            </section>
+          )}
         </>
       )}
     </Layout>

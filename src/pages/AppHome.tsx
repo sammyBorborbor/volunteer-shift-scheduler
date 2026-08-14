@@ -11,7 +11,7 @@ function ShiftCardSkeleton() {
 
 export default function AppHome() {
   const { shifts, loading: shiftsLoading, error, refetch: refetchShifts } = useShifts()
-  const { signedUpShiftIds, loading: signupsLoading, refetch: refetchSignups } = useMySignups()
+  const { myStatusByShiftId, loading: signupsLoading, refetch: refetchSignups } = useMySignups()
 
   const loading = shiftsLoading || signupsLoading
 
@@ -60,7 +60,7 @@ export default function AppHome() {
             <ShiftCard
               key={shift.id}
               shift={shift}
-              isSignedUp={signedUpShiftIds.has(shift.id)}
+              myStatus={myStatusByShiftId.get(shift.id) ?? null}
               onChange={handleChange}
             />
           ))}

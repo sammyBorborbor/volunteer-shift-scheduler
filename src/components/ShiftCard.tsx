@@ -5,29 +5,35 @@ import { StatusPill } from './StatusPill'
 import { useAuth } from '../hooks/useAuth'
 import type { UpcomingShift } from '../hooks/useShifts'
 import { supabase } from '../lib/supabaseClient'
+import type { AttendanceStatus } from '../lib/shiftDisplay'
 import {
   formatShiftDate,
   formatShiftTimeRange,
+  getAttendanceStatus,
   getCapacityStatus,
   getShiftActionState,
 } from '../lib/shiftDisplay'
 
 interface ShiftCardProps {
   shift: UpcomingShift
-  isSignedUp: boolean
+  myStatus: AttendanceStatus | null
   onChange: () => void
 }
 
-export function ShiftCard({ shift, isSignedUp, onChange }: ShiftCardProps) {
+export function ShiftCard({ shift, myStatus, onChange }: ShiftCardProps) {
   const { user } = useAuth()
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const actionState = getShiftActionState(shift.remaining_capacity, isSignedUp)
+  const actionState = getShiftActionState(shift.remaining_capacity, myStatus)
   const badge =
-    actionState === 'signed-up'
-      ? { tone: 'success' as const, label: 'Signed up' }
-      : getCapacityStatus(shift.remaining_capacity)
+    actionState === 'open' || actionState === 'full'
+      ? getCapacityStatus(shift.remaining_capacity)
+      : actionState === 'confirmed'
+        ? { tone: 'success' as const, label: 'Signed up' }
+        : actionState === 'completed'
+          ? { tone: 'success' as const, label: 'Attended' }
+          : getAttendanceStatus('no_show')
 
   async function handleSignUp() {
     setSubmitting(true)
@@ -90,7 +96,7 @@ export function ShiftCard({ shift, isSignedUp, onChange }: ShiftCardProps) {
         </div>
       )}
 
-      {actionState === 'signed-up' && (
+      {actionState === 'confirmed' && (
         <div className="mt-1">
           <Button variant="ghost" size="sm" loading={submitting} onClick={handleCancel}>
             Cancel sign-up
