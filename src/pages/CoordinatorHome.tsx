@@ -20,8 +20,8 @@ export default function CoordinatorHome() {
         Welcome{profile?.full_name ? `, ${profile.full_name}` : ''}
       </h2>
       <p className="mt-1 text-sm text-muted">
-        Create shifts for volunteers to sign up for, and view who's signed up for each one.
-        Marking attendance is coming in a later build step.
+        Create shifts for volunteers to sign up for, then use each shift's roster to see who's
+        signed up and mark attendance once it's happened.
       </p>
 
       <Card className="mt-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
