@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { getAttendanceStatus, getCapacityStatus, getShiftActionState } from './shiftDisplay'
+import {
+  getAttendanceStatus,
+  getCapacityStatus,
+  getShiftActionState,
+  getSignupHistoryStatus,
+  getSignupProgress,
+  isUpcoming,
+} from './shiftDisplay'
+
+const TODAY = new Date('2026-08-14T12:00:00Z')
 
 describe('getCapacityStatus', () => {
   it('marks a shift with no remaining spots as full', () => {
@@ -64,6 +73,44 @@ describe('getShiftActionState', () => {
   })
 })
 
+describe('getSignupProgress', () => {
+  it('flags a shift with zero signups as needing volunteers', () => {
+    const progress = getSignupProgress(10, 10)
+    expect(progress.tone).toBe('warning')
+    expect(progress.label).toBe('0/10 signed up')
+  })
+
+  it('flags a shift under half full as needing volunteers', () => {
+    const progress = getSignupProgress(10, 6)
+    expect(progress.tone).toBe('warning')
+    expect(progress.label).toBe('4/10 signed up')
+  })
+
+  it('does not flag a shift exactly half full', () => {
+    const progress = getSignupProgress(10, 5)
+    expect(progress.tone).toBe('success')
+    expect(progress.label).toBe('5/10 signed up')
+  })
+
+  it('does not flag a shift more than half full', () => {
+    const progress = getSignupProgress(10, 4)
+    expect(progress.tone).toBe('success')
+    expect(progress.label).toBe('6/10 signed up')
+  })
+
+  it('does not flag a full shift', () => {
+    const progress = getSignupProgress(10, 0)
+    expect(progress.tone).toBe('success')
+    expect(progress.label).toBe('10/10 signed up')
+  })
+
+  it('handles a capacity-of-one shift with no signups', () => {
+    const progress = getSignupProgress(1, 1)
+    expect(progress.tone).toBe('warning')
+    expect(progress.label).toBe('0/1 signed up')
+  })
+})
+
 describe('getAttendanceStatus', () => {
   it('shows a neutral, pending label for confirmed signups', () => {
     const status = getAttendanceStatus('confirmed')
@@ -81,5 +128,45 @@ describe('getAttendanceStatus', () => {
     const status = getAttendanceStatus('no_show')
     expect(status.tone).toBe('destructive')
     expect(status.label).toBe('No-show')
+  })
+})
+
+describe('isUpcoming', () => {
+  it('treats a future date as upcoming', () => {
+    expect(isUpcoming('2026-08-20', TODAY)).toBe(true)
+  })
+
+  it('treats today as upcoming', () => {
+    expect(isUpcoming('2026-08-14', TODAY)).toBe(true)
+  })
+
+  it('treats a past date as not upcoming', () => {
+    expect(isUpcoming('2026-08-01', TODAY)).toBe(false)
+  })
+})
+
+describe('getSignupHistoryStatus', () => {
+  it('shows the same label as getAttendanceStatus for confirmed', () => {
+    const status = getSignupHistoryStatus('confirmed')
+    expect(status.tone).toBe('neutral')
+    expect(status.label).toBe('Awaiting attendance')
+  })
+
+  it('shows the same label as getAttendanceStatus for completed', () => {
+    const status = getSignupHistoryStatus('completed')
+    expect(status.tone).toBe('success')
+    expect(status.label).toBe('Completed')
+  })
+
+  it('shows the same label as getAttendanceStatus for no_show', () => {
+    const status = getSignupHistoryStatus('no_show')
+    expect(status.tone).toBe('destructive')
+    expect(status.label).toBe('No-show')
+  })
+
+  it('shows a distinct neutral label for cancelled', () => {
+    const status = getSignupHistoryStatus('cancelled')
+    expect(status.tone).toBe('neutral')
+    expect(status.label).toBe('Cancelled')
   })
 })

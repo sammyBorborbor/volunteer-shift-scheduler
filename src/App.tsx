@@ -6,6 +6,7 @@ import AppHome from './pages/AppHome'
 import CoordinatorHome from './pages/CoordinatorHome'
 import CreateShift from './pages/CreateShift'
 import Landing from './pages/Landing'
+import MySignups from './pages/MySignups'
 import Roster from './pages/Roster'
 import SignIn from './pages/SignIn'
 import SignUp from './pages/SignUp'
@@ -49,6 +50,14 @@ function App() {
           element={
             <ProtectedRoute>
               <AppHome />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/app/my-signups"
+          element={
+            <ProtectedRoute role="volunteer">
+              <MySignups />
             </ProtectedRoute>
           }
         />

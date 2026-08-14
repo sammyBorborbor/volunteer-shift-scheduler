@@ -8,7 +8,7 @@ interface LayoutProps {
 
 const volunteerLinks = [
   { label: 'Shifts', to: '/app' },
-  { label: 'My Sign-ups', to: '#' },
+  { label: 'My Sign-ups', to: '/app/my-signups' },
 ]
 
 const coordinatorLinks = [{ label: 'Create Shift', to: '/coordinator/create-shift' }]

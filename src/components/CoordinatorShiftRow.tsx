@@ -3,14 +3,14 @@ import { Button } from './Button'
 import { Card } from './Card'
 import { StatusPill } from './StatusPill'
 import type { UpcomingShift } from '../hooks/useShifts'
-import { formatShiftDate, formatShiftTimeRange, getCapacityStatus } from '../lib/shiftDisplay'
+import { formatShiftDate, formatShiftTimeRange, getSignupProgress } from '../lib/shiftDisplay'
 
 interface CoordinatorShiftRowProps {
   shift: UpcomingShift
 }
 
 export function CoordinatorShiftRow({ shift }: CoordinatorShiftRowProps) {
-  const status = getCapacityStatus(shift.remaining_capacity)
+  const status = getSignupProgress(shift.capacity, shift.remaining_capacity)
 
   return (
     <Card className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

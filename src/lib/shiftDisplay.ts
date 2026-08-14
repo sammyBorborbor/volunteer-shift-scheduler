@@ -17,6 +17,23 @@ export function getCapacityStatus(remaining: number): StatusBadge {
   return { tone: 'success', label: `${remaining} spots left` }
 }
 
+const UNDER_CAPACITY_THRESHOLD = 0.5
+
+// Coordinator-facing signal (FR-11): the volunteer-facing "spots left" framing
+// is the wrong metric here — a shift with 1 spot left out of 10 reads as
+// "urgent" to a volunteer but is actually a well-subscribed, healthy shift
+// from the coordinator's side. This flags the opposite condition: too few
+// people signed up relative to capacity, which is what a coordinator needs
+// to notice and act on (promote the shift, recruit more volunteers).
+export function getSignupProgress(capacity: number, remaining: number): StatusBadge {
+  const confirmed = capacity - remaining
+  const fillRate = capacity > 0 ? confirmed / capacity : 1
+  const label = `${confirmed}/${capacity} signed up`
+  return fillRate < UNDER_CAPACITY_THRESHOLD
+    ? { tone: 'warning', label }
+    : { tone: 'success', label }
+}
+
 export type AttendanceStatus = 'confirmed' | 'completed' | 'no_show'
 
 const attendanceStatusMap: Record<AttendanceStatus, StatusBadge> = {
@@ -27,6 +44,21 @@ const attendanceStatusMap: Record<AttendanceStatus, StatusBadge> = {
 
 export function getAttendanceStatus(status: AttendanceStatus): StatusBadge {
   return attendanceStatusMap[status]
+}
+
+export type SignupHistoryStatus = AttendanceStatus | 'cancelled'
+
+// A volunteer's own history (FR-09) needs 'cancelled' as a real, visible
+// state — unlike everywhere else in the app, where cancelled is deliberately
+// excluded because it means "free to sign up again." Kept as a separate type
+// from AttendanceStatus rather than widening that one, since every other
+// caller (useMySignups, useRoster, ShiftCard, RosterEntryRow) intentionally
+// never sees 'cancelled' and shouldn't have to handle it.
+export function getSignupHistoryStatus(status: SignupHistoryStatus): StatusBadge {
+  if (status === 'cancelled') {
+    return { tone: 'neutral', label: 'Cancelled' }
+  }
+  return getAttendanceStatus(status)
 }
 
 export type ShiftActionState = AttendanceStatus | 'full' | 'open'
@@ -43,6 +75,13 @@ export function getShiftActionState(
   if (myStatus) return myStatus
   if (remaining <= 0) return 'full'
   return 'open'
+}
+
+// Same "today counts as upcoming" convention as shiftValidation's date rule —
+// a shift happening later today isn't past yet.
+export function isUpcoming(date: string, now: Date = new Date()): boolean {
+  const today = now.toISOString().slice(0, 10)
+  return date >= today
 }
 
 export function formatShiftDate(date: string): string {
