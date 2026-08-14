@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-An exam project (CSCD602 Advanced Software Engineering, University of Ghana) — a volunteer shift-scheduling app under a strict 48-hour build window. **Read `CONTEXT.md` first, always** — it is the authoritative handoff brief: functional/non-functional requirements (MoSCoW-prioritized), the full DB schema + RLS policies, the 9-step implementation order with its time budget, and explicit scope boundaries (what's Won't-have and must not be built even if easy). Treat scope discipline as a hard constraint, not a suggestion.
+An exam project (CSCD602 Advanced Software Engineering, University of Ghana) — a volunteer shift-scheduling app under a strict 48-hour build window. Live at **https://volunteer-shift-scheduler.vercel.app/** (auto-deploys from `main` via Vercel). **Read `CONTEXT.md` first, always** — it is the authoritative handoff brief: functional/non-functional requirements (MoSCoW-prioritized), the full DB schema + RLS policies, the 9-step implementation order with its time budget, and explicit scope boundaries (what's Won't-have and must not be built even if easy). Treat scope discipline as a hard constraint, not a suggestion.
 
 ## Commands
 

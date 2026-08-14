@@ -1,4 +1,10 @@
-# React + TypeScript + Vite
+# Volunteer Shift Scheduler
+
+Live app: **https://volunteer-shift-scheduler.vercel.app/**
+
+CSCD602 Advanced Software Engineering exam project (University of Ghana). See `CONTEXT.md` for the full requirements, schema, and build plan.
+
+## React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
