@@ -13,6 +13,10 @@ dist-ssr
 *.local
 .playwright-mcp
 
+# Compiled submission artifact (regenerated from docs/ + the .docx files;
+# not source, so not committed — see docs/MAINTENANCE.md if regenerating)
+docs/Volunteer_Shift_Scheduler_Documentation.pdf
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
