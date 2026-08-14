@@ -1,13 +1,21 @@
 import type { ReactNode } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
+import type { UserRole } from './hooks/useAuth'
 import AppHome from './pages/AppHome'
+import CoordinatorHome from './pages/CoordinatorHome'
+import CreateShift from './pages/CreateShift'
 import Landing from './pages/Landing'
 import SignIn from './pages/SignIn'
 import SignUp from './pages/SignUp'
 
-function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth()
+const homeForRole: Record<UserRole, string> = {
+  volunteer: '/app',
+  coordinator: '/coordinator',
+}
+
+function ProtectedRoute({ children, role }: { children: ReactNode; role?: UserRole }) {
+  const { user, profile, loading } = useAuth()
 
   if (loading) {
     return (
@@ -19,6 +27,10 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 
   if (!user) {
     return <Navigate to="/signin" replace />
+  }
+
+  if (role && profile?.role !== role) {
+    return <Navigate to={profile ? homeForRole[profile.role] : '/signin'} replace />
   }
 
   return <>{children}</>
@@ -36,6 +48,22 @@ function App() {
           element={
             <ProtectedRoute>
               <AppHome />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/coordinator"
+          element={
+            <ProtectedRoute role="coordinator">
+              <CoordinatorHome />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/coordinator/create-shift"
+          element={
+            <ProtectedRoute role="coordinator">
+              <CreateShift />
             </ProtectedRoute>
           }
         />

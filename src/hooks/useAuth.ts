@@ -2,6 +2,15 @@ import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabaseClient'
 
+export type UserRole = 'volunteer' | 'coordinator'
+
+export interface Profile {
+  id: string
+  full_name: string
+  role: UserRole
+  phone: string | null
+}
+
 interface SignUpDetails {
   email: string
   password: string
@@ -9,13 +18,29 @@ interface SignUpDetails {
   phone?: string
 }
 
+async function fetchProfile(userId: string): Promise<Profile | null> {
+  const { data } = await supabase
+    .from('profiles')
+    .select('id, full_name, role, phone')
+    .eq('id', userId)
+    .single()
+  return data
+}
+
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    let cancelled = false
+
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (cancelled) return
       setSession(data.session)
+      const nextProfile = data.session ? await fetchProfile(data.session.user.id) : null
+      if (cancelled) return
+      setProfile(nextProfile)
       setLoading(false)
     })
 
@@ -23,9 +48,19 @@ export function useAuth() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession)
+      if (newSession) {
+        fetchProfile(newSession.user.id).then((p) => {
+          if (!cancelled) setProfile(p)
+        })
+      } else {
+        setProfile(null)
+      }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      cancelled = true
+      subscription.unsubscribe()
+    }
   }, [])
 
   async function signUp({ email, password, fullName, phone }: SignUpDetails) {
@@ -43,7 +78,9 @@ export function useAuth() {
   async function signIn(email: string, password: string) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
-    return data
+    const signedInProfile = await fetchProfile(data.user.id)
+    setProfile(signedInProfile)
+    return { ...data, profile: signedInProfile }
   }
 
   async function signOut() {
@@ -54,6 +91,7 @@ export function useAuth() {
   return {
     user: session?.user ?? null,
     session,
+    profile,
     loading,
     signUp,
     signIn,

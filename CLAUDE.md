@@ -9,15 +9,16 @@ An exam project (CSCD602 Advanced Software Engineering, University of Ghana) —
 ## Commands
 
 - `npm run dev` — start the Vite dev server
-- `npm run build` — typecheck (`tsc -b`) then production build; treat as the primary correctness gate, since there is no test runner configured yet
+- `npm run build` — typecheck (`tsc -b`) then production build
 - `npm run lint` — oxlint (config: `.oxlintrc.json`)
+- `npm run test` — Vitest (run once, no watch)
 - `npm run preview` — preview the production build locally
 
 ## Testing
 
 Follow **test-driven development** for new functionality: write a failing test first, implement the minimum needed to pass it, then refactor. This supersedes CONTEXT.md's original plan of a separate Phase 4 testing pass after implementation — write tests as you build, not after.
 
-No test runner is configured yet. Set one up (Vitest is the natural fit for this Vite + React stack) the first time a test is actually needed, rather than installing test infrastructure speculatively. CONTEXT.md's Phase 4 test-case list (unit/functional/integration/UAT/security) is still the reference for *what* to cover — TDD changes *when* those tests get written, not what they need to check.
+Vitest is set up (node environment, no jsdom — tests so far are pure-function unit tests, e.g. `src/lib/shiftValidation.test.ts`). Add jsdom/@testing-library only when a test actually needs to render a component; don't add it speculatively. CONTEXT.md's Phase 4 test-case list (unit/functional/integration/UAT/security) is still the reference for *what* to cover — TDD changes *when* those tests get written, not what they need to check. Supabase-integrated flows (auth, RLS-gated queries) are still verified live (Supabase MCP + Playwright against the real project) rather than mocked — this project doesn't have a local Supabase stack, and RLS/trigger behavior is exactly the kind of thing a mock would hide.
 
 ## Git commits
 
@@ -29,14 +30,18 @@ This is an individually graded exam submission — no collaboration is permitted
 
 **Folder layout** (feature-area organization per CONTEXT.md's NFR-06):
 - `src/components/` — shared UI primitives (`Button`, `Card`, `StatusPill`, `Layout`, `FormField`)
-- `src/pages/` — route-level views, one per use case (`Landing`, `SignUp`, `SignIn`, `AppHome`)
+- `src/pages/` — route-level views, one per use case (`Landing`, `SignUp`, `SignIn`, `AppHome`, `CoordinatorHome`, `CreateShift`)
 - `src/hooks/` — data/auth hooks (`useAuth`)
-- `src/lib/supabaseClient.ts` — the single Supabase client instance
+- `src/lib/` — `supabaseClient.ts` (the single client instance) and pure logic modules like `shiftValidation.ts`
 
 **Supabase wiring (`src/lib/supabaseClient.ts`):** exports `supabase` and `isSupabaseConfigured`. It deliberately never throws on missing env vars — a prior version did, which crashed the entire React tree before anything rendered (a blank page with only a console error). Any code path that touches Supabase should check `isSupabaseConfigured` and degrade to a visible status/error state, never let a missing-config error take down the whole app (NFR-04: no silent failures).
 
 **Env vars:** must be prefixed `VITE_` (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) for Vite to expose them to the client. CONTEXT.md's own `.env.local` example omits the prefix — don't copy that naming literally.
 
-**Database (`supabase/migrations/`):** sequentially numbered SQL files, applied directly against the live Supabase project via the Supabase MCP tools (`mcp__claude_ai_Supabase__*`) rather than the CLI. `0001_init.sql` is schema + RLS + the `sign_up_for_shift` RPC verbatim from CONTEXT.md; `0002`/`0003` harden that RPC (pinned `search_path`, revoked `anon` execution). **Supabase auto-grants `EXECUTE` on new `public`-schema functions to `anon` and `authenticated` by default** — a `SECURITY DEFINER` function is silently callable by anyone unless you explicitly `revoke ... from anon`. Run `get_advisors` (security) after any migration that adds a function; don't assume the SQL in CONTEXT.md is complete as written.
+**Database (`supabase/migrations/`):** sequentially numbered SQL files, applied directly against the live Supabase project via the Supabase MCP tools (`mcp__claude_ai_Supabase__*`) rather than the CLI. `0001_init.sql` is schema + RLS + the `sign_up_for_shift` RPC verbatim from CONTEXT.md; `0002`/`0003` harden that RPC (pinned `search_path`, revoked `anon` execution); `0004`/`0005` close a role-self-escalation hole and a signup-status-tampering hole found in a security review, plus a TOCTOU race in the RPC; `0006`/`0007` auto-create the `profiles` row from an `auth.users` trigger (no public INSERT policy on `profiles` exists — see below). **Supabase auto-grants `EXECUTE` on new `public`-schema functions to `anon` and `authenticated` by default** — a `SECURITY DEFINER` function is silently callable by anyone unless you explicitly `revoke ... from anon`. Run `get_advisors` (security) after any migration that adds a function; don't assume the SQL in CONTEXT.md is complete as written.
+
+**Role model:** `profiles.role` is `'volunteer'` or `'coordinator'`. There is no self-service coordinator signup (by design — that would be the exact privilege-escalation hole `0004` closes) and a `BEFORE UPDATE` trigger (`profiles_prevent_role_change`) blocks *any* update that changes `role`, including admin ones via direct SQL. To seed or promote a coordinator account, `alter table profiles disable trigger profiles_prevent_role_change;`, run the update, then re-enable it — don't try to UPDATE role directly, it will fail. `useAuth()` exposes `profile` (fetched from `profiles` on session change); `signIn()` returns the profile directly so callers (e.g. `SignIn.tsx`) can branch on role immediately without waiting on the hook's async state. Route protection: `ProtectedRoute` in `App.tsx` takes an optional `role` prop and redirects a signed-in user with the wrong role to *their own* home (`/app` or `/coordinator`), not to `/signin` — they're authenticated, just in the wrong place. This is a UX guard only; the real enforcement is RLS (verified live: a volunteer's direct `POST /rest/v1/shifts` gets a `403` from Postgres, independent of anything the client does).
+
+**Nav placeholders (`Layout.tsx`):** links not wired to a real route yet use `to: '#'` and must render as a plain `<a href="#">`, not React Router's `<Link>` — `<Link to="#">` resolves relative to the *current* route (so on `/coordinator/create-shift` it silently becomes a link back to that same page), which is a real bug that shipped once already. Check `link.to === '#'` and branch, don't default to `<Link>` for everything.
 
 **Design tokens (`src/index.css`):** Tailwind v4 `@theme` block, semantic (not literal) color names — `ink`/`ink-foreground`, `accent`/`accent-foreground`, `surface`/`surface-elevated`, `muted`, `border`, plus `success`/`warning`/`destructive`/`neutral` pairs (each a light background + a matching darker text color, tuned for ≥4.5:1 contrast — don't pair an accent background with white text without checking contrast first, e.g. white-on-`accent` is ~1.7:1). Single font family (Inter) throughout — intentional for this app-UI/product register, not an oversight.

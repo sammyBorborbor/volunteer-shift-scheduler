@@ -20,8 +20,8 @@ export default function SignIn() {
     setFormError(null)
     setSubmitting(true)
     try {
-      await signIn(email, password)
-      navigate('/app', { replace: true })
+      const { profile } = await signIn(email, password)
+      navigate(profile?.role === 'coordinator' ? '/coordinator' : '/app', { replace: true })
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
     } finally {
