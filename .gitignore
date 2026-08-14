@@ -28,7 +28,7 @@ docs/Volunteer_Shift_Scheduler_Documentation.pdf
 *.sln
 *.sw?
 .claude
-docs
+docs/
 
 # Packaged exam submission (built from docs/ + diagrams/; not source)
 *.zip
