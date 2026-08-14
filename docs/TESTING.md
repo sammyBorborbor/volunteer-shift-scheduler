@@ -8,7 +8,7 @@ Covers CONTEXT.md's Phase 4 testing plan (Unit / Functional / Integration / UAT 
 
 ## Unit tests (automated — `npm run test`)
 
-29 tests across 2 files, all passing as of 2026-08-14.
+49 tests across 2 files, all passing as of 2026-08-14 (grew from the original 29 as the Should-have features below were built TDD — failing test first, then implementation, per CLAUDE.md's testing policy).
 
 ### `src/lib/shiftValidation.test.ts` (14 tests)
 
@@ -29,7 +29,7 @@ Covers CONTEXT.md's Phase 4 testing plan (Unit / Functional / Integration / UAT 
 | Non-integer capacity (e.g. 3.5) | Capacity error | Capacity error | Pass |
 | Valid positive integer capacity | No capacity error | No error | Pass |
 
-### `src/lib/shiftDisplay.test.ts` (15 tests)
+### `src/lib/shiftDisplay.test.ts` (35 tests)
 
 | Test case | Expected result | Actual result | Pass/Fail |
 |---|---|---|---|
@@ -48,6 +48,26 @@ Covers CONTEXT.md's Phase 4 testing plan (Unit / Functional / Integration / UAT 
 | Attendance status: confirmed | `neutral` / "Awaiting attendance" | Matched | Pass |
 | Attendance status: completed | `success` / "Completed" | Matched | Pass |
 | Attendance status: no_show | `destructive` / "No-show" | Matched | Pass |
+| Signup progress (FR-11): 0 confirmed of 10 | `warning` / "0/10 signed up" | Matched | Pass |
+| Signup progress: under half full (4/10) | `warning` / "4/10 signed up" | Matched | Pass |
+| Signup progress: exactly half full (5/10) | `success` / "5/10 signed up" (boundary, not flagged) | Matched | Pass |
+| Signup progress: more than half full (6/10) | `success` / "6/10 signed up" | Matched | Pass |
+| Signup progress: full shift (10/10) | `success` / "10/10 signed up" | Matched | Pass |
+| Signup progress: capacity-of-one, no signups | `warning` / "0/1 signed up" | Matched | Pass |
+| isUpcoming: future date | `true` | Matched | Pass |
+| isUpcoming: today | `true` (today counts as upcoming) | Matched | Pass |
+| isUpcoming: past date | `false` | Matched | Pass |
+| Signup history status (FR-09): confirmed | Same as attendance status — `neutral` / "Awaiting attendance" | Matched | Pass |
+| Signup history status: completed | Same as attendance status — `success` / "Completed" | Matched | Pass |
+| Signup history status: no_show | Same as attendance status — `destructive` / "No-show" | Matched | Pass |
+| Signup history status: cancelled (self-cancelled) | `neutral` / "Cancelled" | Matched | Pass |
+| Signup history status: cancelled (coordinator cancelled the shift, FR-10) | `neutral` / "Shift cancelled" — distinct label | Matched | Pass |
+| Signup history status: shift-cancelled flag ignored for non-cancelled statuses | "Completed", not "Shift cancelled" | Matched | Pass |
+| Shift editability (FR-10): upcoming, not cancelled | `canEdit`/`canCancel` both `true`, no reason | Matched | Pass |
+| Shift editability: shift happening today | `canEdit`/`canCancel` both `true` | Matched | Pass |
+| Shift editability: already cancelled | Both `false`, reason "This shift has been cancelled." | Matched | Pass |
+| Shift editability: already happened (past date) | Both `false`, reason "Past shifts can't be edited or cancelled." | Matched | Pass |
+| Shift editability: cancelled *and* past | Cancelled reason wins over past-shift reason | Matched | Pass |
 
 ---
 
@@ -65,8 +85,16 @@ Covers CONTEXT.md's Phase 4 testing plan (Unit / Functional / Integration / UAT 
 | Coordinator marks a volunteer completed | Row status → `completed`, moves to "Recorded" section | Confirmed live: badge changed, row moved sections, "Mark completed" button disabled on that row | Pass |
 | Coordinator marks a volunteer no-show | Row status → `no_show` | Confirmed live: destructive-tone badge, correct button disabled | Pass |
 | Coordinator corrects a recorded attendance mark | Status flips between `completed` ↔ `no_show` | Clicked "Mark completed" on a `no_show` row; badge and button-disabled state updated correctly | Pass |
+| Coordinator dashboard shows under-capacity signal (FR-11) | Shift under 50% filled shows a warning-tone "X/Y signed up" badge; at/above 50% shows success tone | Created two live shifts (1/4 confirmed = 25%, 1/2 confirmed = 50%); dashboard rendered "1/4 signed up" in warning tone and "1/2 signed up" in success tone, matching the tested boundary exactly | Pass |
+| Volunteer views their own shift history (FR-09, `/app/my-signups`) | Every shift the volunteer has ever signed up for, split into Upcoming/Past sections, including cancelled and past-attendance outcomes | Seeded confirmed (upcoming), completed (past-dated via direct SQL, since the UI can't create a past shift), and cancelled signups; page correctly grouped 4 into Upcoming and 1 into Past, with "Awaiting attendance," "Completed," and "Cancelled" badges respectively | Pass |
+| Coordinator edits an existing shift's details (FR-10) | Form pre-fills with current values; saving updates the row and reflects immediately on the dashboard | Edited a shift's capacity from 5 to 4 via `/coordinator/shifts/:id/edit`; redirected to dashboard, capacity badge updated to "1/4 signed up" | Pass |
+| Coordinator attempts to lower a shift's capacity below its confirmed-signup count | Rejected with a clear error, not a silent failure or a negative-capacity state | Direct SQL `update` attempting to set `capacity=0` on a shift with 1 confirmed signup was rejected by a DB trigger: `"Capacity can't be lower than the 1 volunteer(s) already signed up"` | Pass |
+| Coordinator cancels a shift (FR-10) | Shift soft-deleted (`cancelled_at` set), every `confirmed` signup on it cascades to `cancelled`, shift disappears from both the coordinator dashboard and volunteer browse list | Clicked "Cancel this shift" on the roster page (with a confirm dialog first) on a shift with 1 confirmed signup; roster immediately showed "This shift was cancelled" and the volunteer dropped off the "Awaiting attendance" list; confirmed via DB that `cancelled_at` was set and the signup flipped to `cancelled` | Pass |
+| Cancelled shift still visible via its own roster URL and in an affected volunteer's history | Not silently deleted — audit trail preserved | Roster page for the cancelled shift still loaded correctly showing "This shift was cancelled"; the volunteer's `/app/my-signups` showed it under Upcoming with a distinct "Shift cancelled" badge (not the generic "Cancelled" used for self-cancellation) | Pass |
 
 **Bug found and fixed during functional testing:** `sign_up_for_shift` only ever did a plain `INSERT`, and `signups` has a `unique (shift_id, volunteer_id)` constraint — so cancelling and signing up again for the same shift (an entirely ordinary flow) hit a raw Postgres constraint-violation error instead of succeeding. Fixed in `supabase/migrations/0009_allow_resignup_after_cancel.sql`: an existing `cancelled` row is now updated back to `confirmed`; any other existing status is rejected up front with a clear message. Retested after the fix — see row above.
+
+**Design constraint discovered while building FR-10 (cancel shift):** the original plan considered a hard `DELETE` on `shifts` for "cancel." Tried it directly against a shift with an existing signup and got a `23503` foreign-key violation (`signups.shift_id` has no `ON DELETE CASCADE`) — confirmed live before writing any cancel code, not assumed. This is why cancel is a soft-delete (`shifts.cancelled_at`) instead: it also preserves the roster/audit trail, matching how `signups.status = 'cancelled'` already works.
 
 ---
 
@@ -82,6 +110,8 @@ All run against the live Supabase project (Postgres 17, `eu-west-1`), not a mock
 | Coordinator account seeding (no self-service signup path exists) | New coordinator created via direct `auth.users`/`auth.identities` insert + a role promotion that requires disabling/re-enabling `profiles_prevent_role_change` | Both seeded accounts (see Deployment section) created this way; login confirmed via password grant | Pass |
 | Production build reflects the deployed Supabase project correctly | Live app talks to the same project as local dev | Signed in on the production URL with the seeded coordinator account; shift list, roster, and attendance marking all worked identically to local | Pass |
 | Vercel routing serves client-side routes correctly | Direct navigation/refresh on any route works, not just `/` | **Failed initially**: `/signin`, `/app`, `/coordinator` all returned `404` on direct navigation (missing SPA rewrite). Fixed by adding `vercel.json`; retested all three routes after redeploy — all correctly load or redirect to `/signin` | Pass (after fix) |
+| `get_upcoming_shifts_with_capacity` excludes cancelled shifts (FR-10) | A shift with `cancelled_at` set no longer appears in either the coordinator dashboard or volunteer browse list | Cancelled a live shift via the RPC; confirmed it disappeared from both `/coordinator` and `/app` on refetch, while remaining reachable at its own roster URL | Pass |
+| Cancel cascade is enforced at the DB level regardless of write path (see Security tests — authorization-bypass fix) | Setting `shifts.cancelled_at` directly (bypassing `cancel_shift` entirely) still cascades confirmed signups to `cancelled` | Direct SQL `update shifts set cancelled_at = now()` on a shift with a confirmed signup — signup flipped to `cancelled` automatically, with no RPC call involved | Pass (after fix, `0011`) |
 
 ---
 
@@ -98,17 +128,21 @@ All run against the live Supabase project (Postgres 17, `eu-west-1`), not a mock
 8. Sign up again for the same shift → succeeds (previously broken, now fixed — see Functional section).
 9. After a coordinator marks attendance on a shift the volunteer attended → badge shows "Attended," no button (previously this incorrectly showed "Sign up" again — now fixed).
 10. Attempt direct navigation to `/coordinator` → redirected to own home (`/app`), not an error page.
+11. Open "My Sign-ups" (FR-09) → every shift ever signed up for, split into Upcoming/Past, including a completed past shift and a cancelled one with the correct badge on each.
+12. A shift the volunteer was signed up for gets cancelled by the coordinator → it disappears from the browse list on `/app`, and "My Sign-ups" now shows it with a distinct "Shift cancelled" badge (not the same label as cancelling it themselves).
 
 ### As a coordinator
 1. Sign in with the seeded coordinator account → redirected to `/coordinator`, distinct nav (`Create Shift`, no volunteer-only links).
 2. Create a shift with invalid data (empty form) → inline validation on every required field, no submission.
 3. Create a valid shift → success screen, "Create another" / "Back to dashboard."
-4. See the new shift on the dashboard with a live capacity badge.
+4. See the new shift on the dashboard with a live "X/Y signed up" fill-rate badge (FR-11) — warning tone below 50% filled, success tone at/above.
 5. Click "View roster" → shift details, capacity summary, "Awaiting attendance" section.
 6. Mark a volunteer completed, then another no-show → sections regroup correctly, badges match.
 7. Correct a no-show to completed → confirmed working, no separate "undo" needed.
-8. Attempt direct navigation to `/app` while signed in as coordinator → redirected to own home (`/coordinator`).
-9. Sign out → redirected to `/signin` (not `/`), matching the reactive route guard rather than a hardcoded redirect.
+8. Click "Edit" on a shift (FR-10) → form pre-fills with current values; change capacity and save → redirected to dashboard, badge reflects the new value.
+9. From the roster page, click "Cancel this shift" (FR-10) → confirm dialog, then "This shift was cancelled" banner; the shift drops off the dashboard entirely.
+10. Attempt direct navigation to `/app` while signed in as coordinator → redirected to own home (`/coordinator`).
+11. Sign out → redirected to `/signin` (not `/`), matching the reactive route guard rather than a hardcoded redirect.
 
 ---
 
@@ -124,6 +158,7 @@ All run against the live Supabase project (Postgres 17, `eu-west-1`), not a mock
 | Anonymous (unauthenticated) request to `sign_up_for_shift` | `401`, permission denied | Matched: `permission denied for function sign_up_for_shift` | Pass |
 | Anonymous request to `get_upcoming_shifts_with_capacity` | `401`, permission denied | Matched | Pass |
 | Volunteer attempts direct navigation to a coordinator-only route (`/coordinator`, `/coordinator/*`) | Client-side redirect to own home — a UX guard, not the real boundary | Matched; underlying RLS is the actual enforcement, confirmed separately above | Pass |
-| `security definer` functions (`sign_up_for_shift`, `get_upcoming_shifts_with_capacity`) checked via Supabase security advisor after every migration that touched them | No unexpected `anon` exposure | Advisor confirmed `anon` execute revoked on both; the one remaining advisory (`authenticated` can call them) is intentional — that's how volunteers are meant to use them | Pass |
+| `security definer` functions (`sign_up_for_shift`, `get_upcoming_shifts_with_capacity`, `cancel_shift`) checked via Supabase security advisor after every migration that touched them | No unexpected `anon` exposure | Advisor confirmed `anon` execute revoked on all three; the one remaining advisory (`authenticated` can call them) is intentional — that's how volunteers/coordinators are meant to use them | Pass |
+| Coordinator bypasses `cancel_shift` entirely by writing `shifts.cancelled_at` directly (e.g. a raw `PATCH /rest/v1/shifts`) | Should still cascade every confirmed signup to `cancelled` — the RPC's role check isn't the only thing standing between a client and the raw table | **Failed initially**: `shifts_write_coordinator` has no column restriction and no explicit `with check`, so a direct write set `cancelled_at` while leaving confirmed signups untouched — an orphaned "confirmed" commitment on a shift the app already treated as cancelled. Caught by a background security review, then reproduced live with a direct SQL update before fixing. Fixed in `supabase/migrations/0011_cascade_cancel_via_trigger.sql` by moving the cascade into an `after update on shifts` trigger, so it fires regardless of write path; `cancel_shift`'s only remaining job is the coordinator-only role check. Retested the same direct-write bypass after the fix — signup cascaded correctly with no RPC involved | Pass (after fix) |
 
 **Known, accepted advisory (not fixed):** "Leaked password protection disabled" — a Supabase Auth dashboard setting (checks new passwords against HaveIBeenPwned), not reachable through the tools used to build this project. Logged in the technical debt log.
