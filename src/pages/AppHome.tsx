@@ -1,5 +1,6 @@
 import { Layout } from '../components/Layout'
 import { ShiftCard } from '../components/ShiftCard'
+import { useMySignups } from '../hooks/useMySignups'
 import { useShifts } from '../hooks/useShifts'
 
 function ShiftCardSkeleton() {
@@ -9,7 +10,15 @@ function ShiftCardSkeleton() {
 }
 
 export default function AppHome() {
-  const { shifts, loading, error } = useShifts()
+  const { shifts, loading: shiftsLoading, error, refetch: refetchShifts } = useShifts()
+  const { signedUpShiftIds, loading: signupsLoading, refetch: refetchSignups } = useMySignups()
+
+  const loading = shiftsLoading || signupsLoading
+
+  function handleSignedUp() {
+    refetchShifts()
+    refetchSignups()
+  }
 
   return (
     <Layout>
@@ -48,7 +57,12 @@ export default function AppHome() {
           style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}
         >
           {shifts.map((shift) => (
-            <ShiftCard key={shift.id} shift={shift} />
+            <ShiftCard
+              key={shift.id}
+              shift={shift}
+              isSignedUp={signedUpShiftIds.has(shift.id)}
+              onSignedUp={handleSignedUp}
+            />
           ))}
         </div>
       )}

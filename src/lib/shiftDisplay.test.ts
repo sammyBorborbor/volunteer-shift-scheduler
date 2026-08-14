@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getCapacityStatus } from './shiftDisplay'
+import { getCapacityStatus, getShiftActionState } from './shiftDisplay'
 
 describe('getCapacityStatus', () => {
   it('marks a shift with no remaining spots as full', () => {
@@ -35,5 +35,23 @@ describe('getCapacityStatus', () => {
   it('treats the low/plenty boundary consistently', () => {
     expect(getCapacityStatus(2).tone).toBe('warning')
     expect(getCapacityStatus(3).tone).toBe('success')
+  })
+})
+
+describe('getShiftActionState', () => {
+  it('is open when spots remain and the volunteer has not signed up', () => {
+    expect(getShiftActionState(5, false)).toBe('open')
+  })
+
+  it('is full when no spots remain and the volunteer has not signed up', () => {
+    expect(getShiftActionState(0, false)).toBe('full')
+  })
+
+  it('is signed-up when the volunteer has already signed up, regardless of spots left', () => {
+    expect(getShiftActionState(5, true)).toBe('signed-up')
+  })
+
+  it('prioritizes signed-up over full when the volunteer took the last spot', () => {
+    expect(getShiftActionState(0, true)).toBe('signed-up')
   })
 })

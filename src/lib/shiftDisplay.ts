@@ -17,6 +17,14 @@ export function getCapacityStatus(remaining: number): CapacityStatus {
   return { tone: 'success', label: `${remaining} spots left` }
 }
 
+export type ShiftActionState = 'signed-up' | 'full' | 'open'
+
+export function getShiftActionState(remaining: number, isSignedUp: boolean): ShiftActionState {
+  if (isSignedUp) return 'signed-up'
+  if (remaining <= 0) return 'full'
+  return 'open'
+}
+
 export function formatShiftDate(date: string): string {
   const [year, month, day] = date.split('-').map(Number)
   return new Date(year, month - 1, day).toLocaleDateString(undefined, {
