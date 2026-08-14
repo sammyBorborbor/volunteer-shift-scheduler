@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { CoordinatorShiftRow } from '../components/CoordinatorShiftRow'
+import { DashboardHero } from '../components/DashboardHero'
 import { Layout } from '../components/Layout'
 import { useAuth } from '../hooks/useAuth'
 import { useShifts } from '../hooks/useShifts'
@@ -15,11 +16,17 @@ export default function CoordinatorHome() {
   const { shifts, loading, error } = useShifts()
 
   return (
-    <Layout>
-      <h2 className="text-lg font-semibold text-ink">
-        Welcome{profile?.full_name ? `, ${profile.full_name}` : ''}
-      </h2>
-      <p className="mt-1 text-sm text-muted">
+    <Layout
+      banner={
+        <DashboardHero
+          imageUrl="https://images.unsplash.com/photo-1758599668125-e154250f24bd?auto=format&fit=crop&w=1600&q=80"
+          imageAlt="A coordinator in gloves writing on a clipboard with volunteers working in the background."
+          title={`Welcome back${profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}`}
+          subtitle="Keep shifts staffed and volunteers in the loop."
+        />
+      }
+    >
+      <p className="text-sm text-muted">
         Create shifts for volunteers to sign up for, then use each shift's roster to see who's
         signed up and mark attendance once it's happened.
       </p>
@@ -52,9 +59,10 @@ export default function CoordinatorHome() {
       )}
 
       {!loading && !error && shifts.length === 0 && (
-        <p className="mt-4 text-sm text-muted">
-          No upcoming shifts yet — create one above to get started.
-        </p>
+        <div className="mt-4 rounded-xl border border-dashed border-border bg-surface-elevated px-6 py-10 text-center">
+          <p className="text-sm font-medium text-ink">No upcoming shifts yet</p>
+          <p className="mt-1 text-sm text-muted">Create one above to get started.</p>
+        </div>
       )}
 
       {!loading && !error && shifts.length > 0 && (

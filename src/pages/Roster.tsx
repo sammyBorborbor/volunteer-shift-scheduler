@@ -75,8 +75,11 @@ export default function Roster() {
           )}
 
           {entries.length === 0 && (
-            <div className="mt-6 rounded-xl border border-border bg-surface-elevated">
-              <p className="p-5 text-sm text-muted">No one has signed up for this shift yet.</p>
+            <div className="mt-6 rounded-xl border border-dashed border-border bg-surface-elevated px-6 py-10 text-center">
+              <p className="text-sm font-medium text-ink">No one has signed up yet</p>
+              <p className="mt-1 text-sm text-muted">
+                Volunteers will appear here as soon as they sign up for this shift.
+              </p>
             </div>
           )}
 

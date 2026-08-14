@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 
 interface LayoutProps {
   children: ReactNode
+  banner?: ReactNode
 }
 
 const volunteerLinks = [
@@ -16,7 +17,7 @@ const coordinatorLinks = [{ label: 'Create Shift', to: '/coordinator/create-shif
 const navLinkClasses =
   'inline-flex min-h-11 items-center rounded-md px-3 text-ink-foreground/85 transition-colors duration-200 hover:bg-ink-foreground/10 hover:text-ink-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none'
 
-export function Layout({ children }: LayoutProps) {
+export function Layout({ children, banner }: LayoutProps) {
   const { user, profile, signOut } = useAuth()
 
   const homeTo = profile?.role === 'coordinator' ? '/coordinator' : '/app'
@@ -55,6 +56,8 @@ export function Layout({ children }: LayoutProps) {
           </nav>
         </div>
       </header>
+
+      {banner}
 
       <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
     </div>
