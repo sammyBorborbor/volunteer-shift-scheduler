@@ -28,19 +28,60 @@ Auto-deploys from the `main` branch on every push (Vercel <-> GitHub integration
 
 Supabase project ref: loelmcsadwuzeogcjgea (region: eu-west-1)
 
-Both accounts above are throwaway accounts seeded specifically for grading/demo
+The two accounts above are throwaway accounts seeded specifically for grading/demo
 purposes — not real volunteers. Both are permanent (not cleaned up after testing,
 unlike the temporary shifts/signups created during verification, which were all
 removed).
 
+Additional demo accounts (same password: Testpass123!)
+---------------------------------------------------------
+The live deployment also carries a richer, permanent demo dataset — more accounts
+and a spread of shifts covering every capacity/attendance/cancellation state the
+app can produce, so a reviewer doesn't need to create data by hand to see the full
+feature set:
+
+  Coordinators:
+    qa.coordinator2.shift.scheduler.test@gmail.com  (Maria Owusu)
+    qa.coordinator3.shift.scheduler.test@gmail.com  (James Mensah)
+
+  Volunteers:
+    qa.volunteer3.shift.scheduler.test@gmail.com  (Ama Boateng)
+    qa.volunteer4.shift.scheduler.test@gmail.com  (Kwame Asante)
+    qa.volunteer5.shift.scheduler.test@gmail.com  (Efua Danso)
+    qa.volunteer6.shift.scheduler.test@gmail.com  (Kojo Appiah)
+    qa.volunteer7.shift.scheduler.test@gmail.com  (Abena Osei)
+
+Seeded shift scenarios (all under the accounts above)
+----------------------------------------------------------
+  Community Food Drive     — 2/10 signed up  (under-capacity, warning badge)
+  Beach Cleanup Day        — 1/15 signed up  (well under-capacity)
+  Riverside Park Cleanup   — 5/6 signed up   (near full, success badge)
+  Blood Donation Support   — 4/4 signed up   (exactly full — no "Sign up" button)
+  School Supplies Sorting  — 4/8 signed up   (exactly the 50% success/warning boundary)
+  Charity Fun Run          — cancelled by its coordinator; both volunteers who had
+                              confirmed sign-ups now show "Shift cancelled" in their
+                              own history, distinct from a self-cancelled sign-up
+  Senior Center Visit      — a past shift with recorded attendance (2 completed,
+                              1 no-show), for the roster's "Recorded" section and a
+                              volunteer's own "Past" history
+
+qa.volunteer2 specifically is signed up/recorded across four different states at
+once (confirmed/awaiting attendance, self-cancelled, coordinator-cancelled, and
+completed) — sign in as that account and open "My Sign-ups" to see all four
+side by side.
+
 Suggested walkthrough
 -----------------------
-1. Sign in as the coordinator (Admin credentials above), create a shift.
-2. Sign out, sign in as the volunteer (Test credentials above), sign up for the
-   shift you just created.
-3. Sign out, sign back in as the coordinator, open the shift's roster, mark the
-   volunteer's attendance.
-4. Sign back in as the volunteer to see the "Attended" status reflected.
+1. Sign in as the coordinator (Admin credentials above) — see the dashboard's
+   fill-rate badges across every scenario above without creating anything.
+2. Open a shift's roster to see recorded attendance (Senior Center Visit) or an
+   active roster (any upcoming shift).
+3. Sign in as the volunteer (Test credentials above) and open "My Sign-ups" to
+   see every sign-up status in one place.
+4. To see the live sign-up/attendance flow end to end: sign in as the coordinator,
+   create a new shift; sign out, sign in as the volunteer, sign up for it; sign
+   back in as the coordinator, open its roster, mark the volunteer's attendance;
+   sign back in as the volunteer to see the "Attended" status reflected.
 
 See docs/TESTING.md for the full test evidence behind this build, docs/TECHNICAL_DEBT.md
 for the technical debt log, and docs/IMPLEMENTATION.md for how it was built.
