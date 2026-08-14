@@ -1,50 +1,57 @@
-import { useEffect, useState } from 'react'
 import { Layout } from '../components/Layout'
-import { StatusPill } from '../components/StatusPill'
-import type { StatusTone } from '../components/StatusPill'
-import { useAuth } from '../hooks/useAuth'
-import { isSupabaseConfigured, supabase } from '../lib/supabaseClient'
+import { ShiftCard } from '../components/ShiftCard'
+import { useShifts } from '../hooks/useShifts'
 
-type ConnectionStatus = 'checking' | 'connected' | 'error' | 'not-configured'
-
-const statusCopy: Record<ConnectionStatus, { label: string; tone: StatusTone }> = {
-  checking: { label: 'Checking…', tone: 'neutral' },
-  connected: { label: 'Connected', tone: 'success' },
-  error: { label: 'Connection error', tone: 'destructive' },
-  'not-configured': { label: 'Not configured', tone: 'warning' },
+function ShiftCardSkeleton() {
+  return (
+    <div className="h-32 animate-pulse rounded-xl border border-border bg-surface-elevated" />
+  )
 }
 
 export default function AppHome() {
-  const { user } = useAuth()
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('checking')
-
-  useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setConnectionStatus('not-configured')
-      return
-    }
-    supabase
-      .from('profiles')
-      .select('*', { count: 'exact', head: true })
-      .then(({ error }) => {
-        setConnectionStatus(error ? 'error' : 'connected')
-      })
-  }, [])
-
-  const { label, tone } = statusCopy[connectionStatus]
+  const { shifts, loading, error } = useShifts()
 
   return (
     <Layout>
-      <h2 className="text-lg font-semibold text-ink">
-        Welcome{user?.email ? `, ${user.email}` : ''}
-      </h2>
+      <h2 className="text-lg font-semibold text-ink">Upcoming shifts</h2>
       <p className="mt-1 text-sm text-muted">
-        Shift browsing is coming in the next build step — you're signed in and ready.
+        Sign up for a shift below — capacity updates as volunteers join.
       </p>
-      <p className="mt-6 flex items-center gap-2 text-sm text-muted">
-        Supabase connection
-        <StatusPill tone={tone}>{label}</StatusPill>
-      </p>
+
+      {error && (
+        <p role="alert" aria-live="polite" className="mt-6 text-sm text-destructive">
+          Couldn't load shifts: {error}
+        </p>
+      )}
+
+      {loading && (
+        <div
+          className="mt-6 grid gap-4"
+          style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}
+        >
+          <ShiftCardSkeleton />
+          <ShiftCardSkeleton />
+          <ShiftCardSkeleton />
+        </div>
+      )}
+
+      {!loading && !error && shifts.length === 0 && (
+        <p className="mt-6 text-sm text-muted">
+          No upcoming shifts yet — check back soon, or ask your coordinator when the next one's
+          going up.
+        </p>
+      )}
+
+      {!loading && !error && shifts.length > 0 && (
+        <div
+          className="mt-6 grid gap-4"
+          style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}
+        >
+          {shifts.map((shift) => (
+            <ShiftCard key={shift.id} shift={shift} />
+          ))}
+        </div>
+      )}
     </Layout>
   )
 }

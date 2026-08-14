@@ -7,7 +7,7 @@ interface LayoutProps {
 }
 
 const volunteerLinks = [
-  { label: 'Shifts', to: '#' },
+  { label: 'Shifts', to: '/app' },
   { label: 'My Sign-ups', to: '#' },
 ]
 
