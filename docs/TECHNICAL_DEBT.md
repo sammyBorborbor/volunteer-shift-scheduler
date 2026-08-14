@@ -27,12 +27,14 @@ The brief asks for each item to be classified as **acceptable temporarily**, **s
 With that category empty by design, the remaining ten items split as follows:
 
 **Scheduled for future resolution** (has a concrete next step, worth doing before the next real deployment cycle):
+
 - `profiles.phone` over-exposure — the one item here that's a genuine data-privacy issue rather than a missing feature, and the highest-priority item to actually schedule.
 - No waitlist (FR-12)
 - No automated integration/E2E/security test suite
 - Coordinator has no view of their own cancelled shifts
 
 **Acceptable temporarily** (a deliberate scope boundary for this build, not something actively wrong):
+
 - No email/SMS notifications (explicitly Won't-have)
 - Single-organization assumption (matches the stated scope)
 - Leaked-password protection disabled (a dashboard toggle, not a code issue)
