@@ -1,43 +1,46 @@
-import { useEffect, useState } from 'react'
-import { Layout } from './components/Layout'
-import { StatusPill } from './components/StatusPill'
-import type { StatusTone } from './components/StatusPill'
-import { isSupabaseConfigured, supabase } from './lib/supabaseClient'
+import type { ReactNode } from 'react'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { useAuth } from './hooks/useAuth'
+import AppHome from './pages/AppHome'
+import Landing from './pages/Landing'
+import SignIn from './pages/SignIn'
+import SignUp from './pages/SignUp'
 
-type ConnectionStatus = 'checking' | 'connected' | 'error' | 'not-configured'
+function ProtectedRoute({ children }: { children: ReactNode }) {
+  const { user, loading } = useAuth()
 
-const statusCopy: Record<ConnectionStatus, { label: string; tone: StatusTone }> = {
-  checking: { label: 'Checking…', tone: 'neutral' },
-  connected: { label: 'Connected', tone: 'success' },
-  error: { label: 'Connection error', tone: 'destructive' },
-  'not-configured': { label: 'Not configured', tone: 'warning' },
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface text-sm text-muted">
+        Loading…
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <Navigate to="/signin" replace />
+  }
+
+  return <>{children}</>
 }
 
 function App() {
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('checking')
-
-  useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setConnectionStatus('not-configured')
-      return
-    }
-    supabase
-      .from('profiles')
-      .select('*', { count: 'exact', head: true })
-      .then(({ error }) => {
-        setConnectionStatus(error ? 'error' : 'connected')
-      })
-  }, [])
-
-  const { label, tone } = statusCopy[connectionStatus]
-
   return (
-    <Layout>
-      <p className="flex items-center gap-2 text-sm text-muted">
-        Supabase connection
-        <StatusPill tone={tone}>{label}</StatusPill>
-      </p>
-    </Layout>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/signin" element={<SignIn />} />
+        <Route
+          path="/app"
+          element={
+            <ProtectedRoute>
+              <AppHome />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

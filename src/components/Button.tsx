@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes } from 'react'
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'destructive'
-type ButtonSize = 'md' | 'sm'
+type ButtonSize = 'lg' | 'md' | 'sm'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant
@@ -21,6 +21,7 @@ const variantClasses: Record<ButtonVariant, string> = {
 }
 
 const sizeClasses: Record<ButtonSize, string> = {
+  lg: 'min-h-12 px-6 text-base',
   md: 'min-h-11 px-4 text-sm',
   sm: 'min-h-11 px-3 text-sm',
 }
